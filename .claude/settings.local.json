@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn dev)",
+      "Bash(timeout /t 3)",
+      "Bash(nul)",
+      "Bash(timeout /t 5)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
