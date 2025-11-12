@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -7,13 +7,13 @@ import {
   IconButton,
   Box,
   Container,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   Home as HomeIcon,
-} from '@mui/icons-material';
-import { useThemeMode } from '../../contexts/ThemeContext';
+} from "@mui/icons-material";
+import { useThemeMode } from "../../contexts/ThemeContext";
 
 /**
  * Navbar - Barre de navigation principale
@@ -38,10 +38,10 @@ export default function Navbar() {
             component={RouterLink}
             to="/"
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'inherit',
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              color: "inherit",
               flexGrow: 1,
             }}
           >
@@ -49,7 +49,7 @@ export default function Navbar() {
               sx={{
                 fontSize: 32,
                 mr: 1,
-                color: 'secondary.main',
+                color: "secondary.main",
               }}
             />
             <Box>
@@ -58,20 +58,20 @@ export default function Navbar() {
                 component="div"
                 sx={{
                   fontWeight: 700,
-                  color: 'text.primary',
+                  color: "text.primary",
                   lineHeight: 1.2,
                 }}
               >
-                Quiz Formation Flutter
+                De nouvelles compétences numériques, au quotidien
               </Typography>
               <Typography
                 variant="caption"
                 sx={{
-                  color: 'text.secondary',
-                  display: { xs: 'none', sm: 'block' },
+                  color: "text.secondary",
+                  display: { xs: "none", sm: "block" },
                 }}
               >
-                Développeur Mobile Avancé
+                Le développeur authentique
               </Typography>
             </Box>
           </Box>
@@ -82,7 +82,11 @@ export default function Navbar() {
             to="/"
             sx={{
               mr: 2,
-              display: { xs: 'none', md: 'inline-flex' },
+              color: "text.secondary",
+              display: {
+                xs: "none",
+                md: "inline-flex",
+              },
             }}
           >
             Tableau de bord
@@ -92,12 +96,14 @@ export default function Navbar() {
           <IconButton
             onClick={toggleTheme}
             color="inherit"
-            aria-label={`Activer le mode ${mode === 'light' ? 'sombre' : 'clair'}`}
+            aria-label={`Activer le mode ${
+              mode === "light" ? "sombre" : "clair"
+            }`}
             sx={{
-              color: 'secondary.main',
+              color: "secondary.main",
             }}
           >
-            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
         </Toolbar>
       </Container>

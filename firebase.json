@@ -1,6 +1,7 @@
 {
   "hosting": {
-    "public": "build",
+    "site": "formations-00auth",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -12,15 +13,5 @@
         "destination": "/index.html"
       }
     ]
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "remoteconfig": {
-    "template": "remoteconfig.template.json"
   }
 }

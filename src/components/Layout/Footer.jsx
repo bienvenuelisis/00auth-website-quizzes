@@ -34,7 +34,7 @@ export default function Footer() {
         >
           {/* Copyright */}
           <Typography variant="body2" color="text.secondary" align="center">
-            © {currentYear} 00auth.dev - Formation Développeur Mobile Avancé avec Flutter
+            © {currentYear} 00auth.dev - Le développeur authentique
           </Typography>
 
           {/* Liens */}
@@ -66,7 +66,7 @@ export default function Footer() {
             <Divider orientation="vertical" flexItem />
 
             <Link
-              href="https://github.com/giak"
+              href="https://github.com/bienvenuelisis"
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
@@ -82,7 +82,7 @@ export default function Footer() {
             </Link>
 
             <Link
-              href="https://www.linkedin.com/in/danielkouame/"
+              href="https://www.linkedin.com/in/bienvenu-agbavon/"
               target="_blank"
               rel="noopener noreferrer"
               color="inherit"
@@ -106,7 +106,7 @@ export default function Footer() {
           align="center"
           sx={{ display: 'block', mt: 1 }}
         >
-          Version 1.0.0 - Powered by Firebase AI Logic & Gemini
+          Tous droits réservés. Version 0.1.0
         </Typography>
       </Container>
     </Box>

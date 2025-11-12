@@ -107,6 +107,144 @@ Génère exactement ${questionCount} questions variées et pertinentes.`;
 }
 
 /**
+ * Valider qu'une question est complète et correcte
+ */
+function validateQuestion(question, index) {
+  const errors = [];
+
+  // Vérifier les champs obligatoires de base
+  if (!question.type) {
+    errors.push(`Question ${index + 1}: type manquant`);
+  }
+
+  if (!question.question || question.question.trim() === '') {
+    errors.push(`Question ${index + 1}: texte de la question manquant`);
+  }
+
+  if (question.correctAnswer === undefined || question.correctAnswer === null) {
+    errors.push(`Question ${index + 1}: correctAnswer manquant`);
+  }
+
+  if (!question.explanation || question.explanation.trim() === '') {
+    errors.push(`Question ${index + 1}: explication manquante`);
+  }
+
+  // Validation spécifique selon le type
+  switch (question.type) {
+    case 'multiple-choice':
+    case 'code-completion':
+    case 'code-debugging':
+      // Ces types DOIVENT avoir des options
+      if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
+        errors.push(`Question ${index + 1}: options manquantes ou insuffisantes (besoin de 2+ options pour ${question.type})`);
+      }
+      // Vérifier que correctAnswer est dans les limites
+      if (question.options && (question.correctAnswer < 0 || question.correctAnswer >= question.options.length)) {
+        errors.push(`Question ${index + 1}: correctAnswer (${question.correctAnswer}) hors limites (0-${question.options.length - 1})`);
+      }
+      break;
+
+    case 'true-false':
+      // Vérifier que correctAnswer est 0 ou 1
+      if (question.correctAnswer !== 0 && question.correctAnswer !== 1) {
+        errors.push(`Question ${index + 1}: correctAnswer doit être 0 ou 1 pour true-false (reçu: ${question.correctAnswer})`);
+      }
+      break;
+
+    default:
+      errors.push(`Question ${index + 1}: type invalide "${question.type}"`);
+  }
+
+  return errors;
+}
+
+/**
+ * Valider et corriger automatiquement les questions
+ */
+function validateAndFixQuestions(questions, moduleData) {
+  const validatedQuestions = [];
+  const allErrors = [];
+
+  questions.forEach((q, index) => {
+    const errors = validateQuestion(q, index);
+
+    if (errors.length > 0) {
+      console.warn(`⚠️ Problèmes détectés:`, errors);
+      allErrors.push(...errors);
+
+      // Tenter de corriger automatiquement
+      const fixed = attemptAutoFix(q, index, moduleData);
+      if (fixed) {
+        const fixedErrors = validateQuestion(fixed, index);
+        if (fixedErrors.length === 0) {
+          console.log(`✅ Question ${index + 1} corrigée automatiquement`);
+          validatedQuestions.push(fixed);
+        } else {
+          console.error(`❌ Impossible de corriger la question ${index + 1}`);
+        }
+      }
+    } else {
+      validatedQuestions.push(q);
+    }
+  });
+
+  // Si trop d'erreurs non corrigées, échouer
+  if (validatedQuestions.length < moduleData.questionCount * 0.7) {
+    throw new Error(
+      `Trop de questions invalides (${validatedQuestions.length}/${moduleData.questionCount}). ` +
+      `Erreurs: ${allErrors.slice(0, 5).join('; ')}...`
+    );
+  }
+
+  return validatedQuestions;
+}
+
+/**
+ * Tenter de corriger automatiquement une question problématique
+ */
+function attemptAutoFix(question, index, moduleData) {
+  const fixed = { ...question };
+
+  // Fixer les champs manquants de base
+  if (!fixed.id) fixed.id = `q${index + 1}`;
+  if (!fixed.difficulty) fixed.difficulty = moduleData.difficulty;
+  if (!fixed.points) fixed.points = 10;
+  if (!fixed.timeLimit) fixed.timeLimit = 30;
+  if (!fixed.tags || fixed.tags.length === 0) {
+    fixed.tags = moduleData.topics.slice(0, 3);
+  }
+
+  // Cas spécifique: true-false sans options
+  if (fixed.type === 'true-false') {
+    fixed.options = ['Faux', 'Vrai'];
+    // S'assurer que correctAnswer est 0 ou 1
+    if (fixed.correctAnswer !== 0 && fixed.correctAnswer !== 1) {
+      console.warn(`⚠️ Question ${index + 1}: correctAnswer invalide pour true-false, défaut à 1 (Vrai)`);
+      fixed.correctAnswer = 1;
+    }
+  }
+
+  // Cas spécifique: multiple-choice sans options
+  if (
+    (fixed.type === 'multiple-choice' ||
+     fixed.type === 'code-completion' ||
+     fixed.type === 'code-debugging') &&
+    (!fixed.options || fixed.options.length < 2)
+  ) {
+    // Impossible de corriger sans options valides
+    console.error(`❌ Question ${index + 1}: Impossible de générer des options automatiquement`);
+    return null;
+  }
+
+  // Vérifier les champs critiques non-corrigeables
+  if (!fixed.question || !fixed.explanation) {
+    return null;
+  }
+
+  return fixed;
+}
+
+/**
  * Générer un quiz pour un module donné
  */
 export async function generateQuiz(moduleData) {
@@ -136,8 +274,13 @@ export async function generateQuiz(moduleData) {
 
     console.log(`✅ Quiz généré: ${quizData.questions.length} questions`);
 
-    // Valider et normaliser les questions
-    const normalizedQuestions = quizData.questions.map((q, index) => ({
+    // Valider et corriger les questions
+    const validatedQuestions = validateAndFixQuestions(quizData.questions, moduleData);
+
+    console.log(`✅ Validation terminée: ${validatedQuestions.length} questions valides`);
+
+    // Normaliser les questions validées
+    const normalizedQuestions = validatedQuestions.map((q, index) => ({
       id: q.id || `q${index + 1}`,
       type: q.type,
       difficulty: q.difficulty || moduleData.difficulty,
@@ -165,10 +308,74 @@ export async function generateQuiz(moduleData) {
 }
 
 /**
- * Service de cache pour éviter de régénérer les quiz
+ * Service de cache intelligent pour éviter de régénérer les quiz
+ * Durées adaptatives selon l'état du quiz
  */
 const CACHE_KEY_PREFIX = 'quiz-cache-';
-const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 jours
+const CACHE_STATE_PREFIX = 'quiz-state-';
+
+// Durées de cache intelligentes
+const CACHE_DURATIONS = {
+  ACTIVE_SESSION: 30 * 60 * 1000,      // 30 min - Quiz en cours
+  COMPLETED: 2 * 60 * 60 * 1000,       // 2 heures - Quiz terminé
+  DEFAULT: 2 * 60 * 60 * 1000,         // 2 heures - Par défaut
+};
+
+/**
+ * États possibles d'un quiz
+ */
+export const QuizState = {
+  IN_PROGRESS: 'in-progress',
+  COMPLETED: 'completed',
+  IDLE: 'idle',
+};
+
+/**
+ * Obtenir l'état actuel d'un quiz
+ */
+export function getQuizState(moduleId) {
+  try {
+    const stateKey = CACHE_STATE_PREFIX + moduleId;
+    const state = localStorage.getItem(stateKey);
+    return state ? JSON.parse(state) : { status: QuizState.IDLE, updatedAt: Date.now() };
+  } catch {
+    return { status: QuizState.IDLE, updatedAt: Date.now() };
+  }
+}
+
+/**
+ * Mettre à jour l'état d'un quiz
+ */
+export function setQuizState(moduleId, status, additionalData = {}) {
+  try {
+    const stateKey = CACHE_STATE_PREFIX + moduleId;
+    const stateData = {
+      status,
+      updatedAt: Date.now(),
+      ...additionalData,
+    };
+    localStorage.setItem(stateKey, JSON.stringify(stateData));
+    console.log(`🔄 État du quiz mis à jour: ${moduleId} → ${status}`);
+  } catch (error) {
+    console.error('Erreur mise à jour état:', error);
+  }
+}
+
+/**
+ * Obtenir la durée de cache appropriée selon l'état
+ */
+function getCacheDuration(moduleId) {
+  const state = getQuizState(moduleId);
+
+  switch (state.status) {
+    case QuizState.IN_PROGRESS:
+      return CACHE_DURATIONS.ACTIVE_SESSION;
+    case QuizState.COMPLETED:
+      return CACHE_DURATIONS.COMPLETED;
+    default:
+      return CACHE_DURATIONS.DEFAULT;
+  }
+}
 
 export function getCachedQuiz(moduleId) {
   try {
@@ -179,14 +386,17 @@ export function getCachedQuiz(moduleId) {
 
     const cacheData = JSON.parse(cached);
     const now = Date.now();
+    const cacheDuration = getCacheDuration(moduleId);
 
-    // Vérifier si le cache est expiré
-    if (now - cacheData.cachedAt > CACHE_DURATION) {
+    // Vérifier si le cache est expiré selon l'état
+    if (now - cacheData.cachedAt > cacheDuration) {
       localStorage.removeItem(cacheKey);
+      console.log(`⏰ Cache expiré (${cacheDuration / 1000 / 60}min): ${moduleId}`);
       return null;
     }
 
-    console.log(`📦 Quiz chargé depuis le cache: ${moduleId}`);
+    const state = getQuizState(moduleId);
+    console.log(`📦 Quiz chargé depuis le cache: ${moduleId} [${state.status}]`);
     return cacheData.quiz;
 
   } catch (error) {
@@ -195,7 +405,7 @@ export function getCachedQuiz(moduleId) {
   }
 }
 
-export function cacheQuiz(moduleId, quiz) {
+export function cacheQuiz(moduleId, quiz, initialState = QuizState.IDLE) {
   try {
     const cacheKey = CACHE_KEY_PREFIX + moduleId;
     const cacheData = {
@@ -205,7 +415,10 @@ export function cacheQuiz(moduleId, quiz) {
     };
 
     localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-    console.log(`💾 Quiz mis en cache: ${moduleId}`);
+    setQuizState(moduleId, initialState);
+
+    const duration = getCacheDuration(moduleId);
+    console.log(`💾 Quiz mis en cache: ${moduleId} (expire dans ${duration / 1000 / 60}min)`);
 
   } catch (error) {
     console.error('Erreur mise en cache:', error);
@@ -236,8 +449,29 @@ export async function getOrGenerateQuiz(moduleData) {
  */
 export function clearQuizCache(moduleId) {
   const cacheKey = CACHE_KEY_PREFIX + moduleId;
+  const stateKey = CACHE_STATE_PREFIX + moduleId;
   localStorage.removeItem(cacheKey);
+  localStorage.removeItem(stateKey);
   console.log(`🗑️ Cache vidé: ${moduleId}`);
+}
+
+/**
+ * Forcer la régénération d'un nouveau quiz
+ * Utile pour le bouton "Nouveau quiz"
+ */
+export async function regenerateQuiz(moduleData) {
+  console.log(`🔄 Régénération forcée du quiz: ${moduleData.title}`);
+
+  // Vider le cache existant
+  clearQuizCache(moduleData.id);
+
+  // Générer un nouveau quiz
+  const quiz = await generateQuiz(moduleData);
+
+  // Mettre en cache avec état IDLE
+  cacheQuiz(moduleData.id, quiz, QuizState.IDLE);
+
+  return quiz;
 }
 
 /**
@@ -246,7 +480,7 @@ export function clearQuizCache(moduleId) {
 export function clearAllQuizCache() {
   const keys = Object.keys(localStorage);
   keys.forEach(key => {
-    if (key.startsWith(CACHE_KEY_PREFIX)) {
+    if (key.startsWith(CACHE_KEY_PREFIX) || key.startsWith(CACHE_STATE_PREFIX)) {
       localStorage.removeItem(key);
     }
   });

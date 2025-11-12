@@ -4,13 +4,103 @@
  */
 
 export const MODULES_DATA = [
+  // ==================== MODULE 0: FONDAMENTAUX ====================
+  {
+    id: 'module-0-1-dev-informatique',
+    title: 'Introduction au développement informatique',
+    description: 'Découvrez les bases de la programmation et du développement logiciel',
+    parentModuleId: 'module-0-fondamentaux',
+    previousModuleId: null, // Premier module
+    topics: [
+      'Concepts de base de la programmation',
+      'Variables, types de données et opérateurs',
+      'Structures de contrôle et algorithmes',
+      'Paradigmes de programmation (impératif, POO, fonctionnel)',
+      'Environnements de développement (IDE)',
+      'Gestion de versions avec Git'
+    ],
+    difficulty: 'beginner',
+    minimumScore: 70,
+    questionCount: 12,
+    estimatedTime: 18,
+    isBonus: false,
+    isFirst: true,
+    order: 1
+  },
+  {
+    id: 'module-0-2-mobile-ecosysteme',
+    title: 'Introduction au développement mobile et à l\'écosystème',
+    description: 'Comprenez les écosystèmes Android et iOS',
+    parentModuleId: 'module-0-fondamentaux',
+    previousModuleId: 'module-0-1-dev-informatique',
+    topics: [
+      'Histoire et évolution d\'Android (Linux, ARM, Google Play)',
+      'Écosystème iOS et App Store',
+      'Architecture des systèmes mobiles',
+      'Processus de développement mobile',
+      'Publication dans les stores',
+      'Tendances actuelles du développement mobile'
+    ],
+    difficulty: 'beginner',
+    minimumScore: 70,
+    questionCount: 14,
+    estimatedTime: 20,
+    isBonus: false,
+    isFirst: false,
+    order: 2
+  },
+  {
+    id: 'module-0-3-flutter-comparaison',
+    title: 'Flutter et comparaisons avec les autres outils',
+    description: 'Comparez Flutter aux alternatives natives et cross-platform',
+    parentModuleId: 'module-0-fondamentaux',
+    previousModuleId: 'module-0-2-mobile-ecosysteme',
+    topics: [
+      'Développement natif (Kotlin/JetPack Compose, Swift/SwiftUI)',
+      'Développement cross-platform (React Native, Flutter)',
+      'Développement hybride (technologies Web)',
+      'Avantages et inconvénients de chaque approche',
+      'Performances comparées',
+      'Cas d\'usage et choix technologique'
+    ],
+    difficulty: 'beginner',
+    minimumScore: 70,
+    questionCount: 12,
+    estimatedTime: 18,
+    isBonus: false,
+    isFirst: false,
+    order: 3
+  },
+  {
+    id: 'module-0-4-flutter-architecture',
+    title: 'Architecture et Fonctionnement de Flutter',
+    description: 'Comprenez l\'architecture haut niveau du framework Flutter',
+    parentModuleId: 'module-0-fondamentaux',
+    previousModuleId: 'module-0-3-flutter-comparaison',
+    topics: [
+      'Genèse et évolution de Flutter (2015-2024)',
+      'Langage Dart et compilation multi-plateforme',
+      'Moteurs de rendu (Skia, Impeller)',
+      'Architecture Flutter pour iOS et Android',
+      'Hot Reload vs Hot Restart',
+      'Structure d\'un projet Flutter et compilation native'
+    ],
+    difficulty: 'beginner',
+    minimumScore: 70,
+    questionCount: 16,
+    estimatedTime: 22,
+    isBonus: false,
+    isFirst: false,
+    order: 4
+  },
+
   // ==================== MODULE 1: INTRODUCTION ====================
   {
     id: 'module-1-1-dart',
     title: 'Introduction à la programmation avec Dart',
     description: 'Découvrez les fondamentaux du langage Dart',
     parentModuleId: 'module-1-intro',
-    previousModuleId: null, // Premier module
+    previousModuleId: 'module-0-4-flutter-architecture',
     topics: [
       'Variables et types de données',
       'Opérateurs et expressions',
@@ -24,8 +114,8 @@ export const MODULES_DATA = [
     questionCount: 10,
     estimatedTime: 15,
     isBonus: false,
-    isFirst: true,
-    order: 1
+    isFirst: false,
+    order: 5
   },
   {
     id: 'module-1-2-flutter-init',
@@ -47,7 +137,7 @@ export const MODULES_DATA = [
     estimatedTime: 18,
     isBonus: false,
     isFirst: false,
-    order: 2
+    order: 6
   },
   {
     id: 'module-1-3-composants',
@@ -69,7 +159,7 @@ export const MODULES_DATA = [
     estimatedTime: 20,
     isBonus: false,
     isFirst: false,
-    order: 3
+    order: 7
   },
   {
     id: 'module-1-4-interfaces',
@@ -91,7 +181,7 @@ export const MODULES_DATA = [
     estimatedTime: 18,
     isBonus: false,
     isFirst: false,
-    order: 4
+    order: 8
   },
   {
     id: 'module-1-5-navigation',
@@ -113,7 +203,7 @@ export const MODULES_DATA = [
     estimatedTime: 18,
     isBonus: false,
     isFirst: false,
-    order: 5
+    order: 9
   },
   {
     id: 'module-1-6-theme',
@@ -135,7 +225,7 @@ export const MODULES_DATA = [
     estimatedTime: 15,
     isBonus: false,
     isFirst: false,
-    order: 6
+    order: 10
   },
   {
     id: 'module-1-bonus-navigation',
@@ -156,7 +246,7 @@ export const MODULES_DATA = [
     estimatedTime: 12,
     isBonus: true,
     isFirst: false,
-    order: 7
+    order: 11
   },
 
   // ==================== MODULE 2: INTERMÉDIAIRE ====================
@@ -180,7 +270,7 @@ export const MODULES_DATA = [
     estimatedTime: 22,
     isBonus: false,
     isFirst: false,
-    order: 8
+    order: 12
   },
   {
     id: 'module-2-2-animations',
@@ -202,7 +292,7 @@ export const MODULES_DATA = [
     estimatedTime: 20,
     isBonus: false,
     isFirst: false,
-    order: 9
+    order: 13
   },
   {
     id: 'module-2-3-gestion-etat',
@@ -224,7 +314,7 @@ export const MODULES_DATA = [
     estimatedTime: 25,
     isBonus: false,
     isFirst: false,
-    order: 10
+    order: 14
   },
   {
     id: 'module-2-4-architecture',
@@ -246,7 +336,7 @@ export const MODULES_DATA = [
     estimatedTime: 22,
     isBonus: false,
     isFirst: false,
-    order: 11
+    order: 15
   },
   {
     id: 'module-2-5-dart-avance',
@@ -268,7 +358,7 @@ export const MODULES_DATA = [
     estimatedTime: 28,
     isBonus: false,
     isFirst: false,
-    order: 12
+    order: 16
   },
   {
     id: 'module-2-6-api-stockage',
@@ -290,7 +380,7 @@ export const MODULES_DATA = [
     estimatedTime: 25,
     isBonus: false,
     isFirst: false,
-    order: 13
+    order: 17
   },
   {
     id: 'module-2-bonus-mason',
@@ -311,7 +401,7 @@ export const MODULES_DATA = [
     estimatedTime: 12,
     isBonus: true,
     isFirst: false,
-    order: 14
+    order: 18
   },
   {
     id: 'module-2-bonus-isolates',
@@ -332,7 +422,7 @@ export const MODULES_DATA = [
     estimatedTime: 15,
     isBonus: true,
     isFirst: false,
-    order: 15
+    order: 19
   },
   {
     id: 'module-2-bonus-whatsapp',
@@ -353,7 +443,7 @@ export const MODULES_DATA = [
     estimatedTime: 18,
     isBonus: true,
     isFirst: false,
-    order: 16
+    order: 20
   },
 
   // ==================== MODULE 3: AVANCÉ ====================
@@ -377,7 +467,7 @@ export const MODULES_DATA = [
     estimatedTime: 30,
     isBonus: false,
     isFirst: false,
-    order: 17
+    order: 21
   },
   {
     id: 'module-3-2-qualite-code',
@@ -399,7 +489,7 @@ export const MODULES_DATA = [
     estimatedTime: 25,
     isBonus: false,
     isFirst: false,
-    order: 18
+    order: 22
   },
   {
     id: 'module-3-bonus-fvm',
@@ -419,7 +509,7 @@ export const MODULES_DATA = [
     estimatedTime: 10,
     isBonus: true,
     isFirst: false,
-    order: 19
+    order: 23
   },
   {
     id: 'module-3-bonus-publication-auto',
@@ -439,7 +529,7 @@ export const MODULES_DATA = [
     estimatedTime: 15,
     isBonus: true,
     isFirst: false,
-    order: 20
+    order: 24
   },
   {
     id: 'module-3-bonus-i18n',
@@ -459,7 +549,7 @@ export const MODULES_DATA = [
     estimatedTime: 12,
     isBonus: true,
     isFirst: false,
-    order: 21
+    order: 25
   },
   {
     id: 'module-3-bonus-monetisation',
@@ -480,7 +570,7 @@ export const MODULES_DATA = [
     estimatedTime: 15,
     isBonus: true,
     isFirst: false,
-    order: 22
+    order: 26
   }
 ];
 

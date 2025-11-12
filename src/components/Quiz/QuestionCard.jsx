@@ -96,6 +96,7 @@ export default function QuestionCard({ question, selectedAnswer, onAnswerSelect,
               </Box>
               <Box
                 component="pre"
+                color="text.secondary"
                 sx={{
                   m: 0,
                   p: 0,

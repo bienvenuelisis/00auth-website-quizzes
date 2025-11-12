@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -10,19 +10,19 @@ import {
   DialogContent,
   DialogActions,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import {
   NavigateNext as NextIcon,
   NavigateBefore as PrevIcon,
   Send as SubmitIcon,
   ExitToApp as ExitIcon,
-} from '@mui/icons-material';
-import { AnimatePresence } from 'framer-motion';
-import { useQuizStore } from '../stores/quizStore';
-import { getModuleById } from '../data/modules';
-import QuestionCard from '../components/Quiz/QuestionCard';
-import ProgressBar from '../components/Quiz/ProgressBar';
-import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
+} from "@mui/icons-material";
+import { AnimatePresence } from "framer-motion";
+import { useQuizStore } from "../stores/quizStore";
+import { getModuleById } from "../data/modules";
+import QuestionCard from "../components/Quiz/QuestionCard";
+import ProgressBar from "../components/Quiz/ProgressBar";
+import { useAnalytics, usePageTimeTracking } from "../hooks/useAnalytics";
 
 /**
  * QuizSession - Page de session de quiz active
@@ -61,7 +61,7 @@ export default function QuizSession() {
   const selectedAnswer = answers[currentQuestion?.id];
 
   // Tracker le temps passé sur la page du quiz
-  usePageTimeTracking('quiz_session', moduleId);
+  usePageTimeTracking("quiz_session", moduleId);
 
   useEffect(() => {
     // Si pas de session active, rediriger vers la page du module
@@ -81,10 +81,14 @@ export default function QuizSession() {
 
   const isFirstQuestion = currentQuestionIndex === 0;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const allQuestionsAnswered = questions.every((q) => answers[q.id] !== undefined);
+  const allQuestionsAnswered = questions.every(
+    (q) => answers[q.id] !== undefined
+  );
 
   const handleAnswerSelect = (answer) => {
-    const timeSpent = Math.floor((Date.now() - questionStartTime.current) / 1000);
+    const timeSpent = Math.floor(
+      (Date.now() - questionStartTime.current) / 1000
+    );
 
     // Tracker la réponse
     analytics.trackQuestionAnswer(
@@ -105,7 +109,7 @@ export default function QuizSession() {
         moduleId,
         currentQuestionIndex,
         currentQuestionIndex + 1,
-        'next'
+        "next"
       );
       nextQuestion();
     }
@@ -117,7 +121,7 @@ export default function QuizSession() {
         moduleId,
         currentQuestionIndex,
         currentQuestionIndex - 1,
-        'previous'
+        "previous"
       );
       previousQuestion();
     }
@@ -181,11 +185,13 @@ export default function QuizSession() {
       </Box>
 
       {/* Alerte si pas toutes les questions répondues */}
-      {!allQuestionsAnswered && currentQuestionIndex === questions.length - 1 && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Vous n'avez pas répondu à toutes les questions. Pensez à vérifier vos réponses avant de soumettre.
-        </Alert>
-      )}
+      {!allQuestionsAnswered &&
+        currentQuestionIndex === questions.length - 1 && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            Vous n'avez pas répondu à toutes les questions. Pensez à vérifier
+            vos réponses avant de soumettre.
+          </Alert>
+        )}
 
       {/* Question actuelle */}
       <AnimatePresence mode="wait">
@@ -201,9 +207,9 @@ export default function QuizSession() {
       {/* Navigation */}
       <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           mt: 3,
           gap: 2,
         }}
@@ -219,7 +225,7 @@ export default function QuizSession() {
         </Button>
 
         {/* Navigation gauche/droite */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="outlined"
             startIcon={<PrevIcon />}
@@ -256,11 +262,17 @@ export default function QuizSession() {
         <DialogTitle>Quitter le quiz ?</DialogTitle>
         <DialogContent>
           <Typography>
-            Êtes-vous sûr de vouloir quitter ? Votre progression ne sera pas sauvegardée.
+            Êtes-vous sûr de vouloir quitter ? Votre progression ne sera pas
+            sauvegardée.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setExitDialogOpen(false)}>Annuler</Button>
+          <Button
+            color="text.secondary"
+            onClick={() => setExitDialogOpen(false)}
+          >
+            Annuler
+          </Button>
           <Button onClick={handleExit} color="error" variant="contained">
             Quitter
           </Button>
@@ -268,18 +280,24 @@ export default function QuizSession() {
       </Dialog>
 
       {/* Dialog Soumettre avec questions non répondues */}
-      <Dialog open={submitDialogOpen} onClose={() => setSubmitDialogOpen(false)}>
+      <Dialog
+        open={submitDialogOpen}
+        onClose={() => setSubmitDialogOpen(false)}
+      >
         <DialogTitle>Questions non répondues</DialogTitle>
         <DialogContent>
           <Typography>
-            Vous n'avez pas répondu à toutes les questions. Souhaitez-vous vraiment soumettre le quiz ?
+            Vous n'avez pas répondu à toutes les questions. Souhaitez-vous
+            vraiment soumettre le quiz ?
           </Typography>
           <Alert severity="warning" sx={{ mt: 2 }}>
             Les questions non répondues seront comptées comme incorrectes.
           </Alert>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSubmitDialogOpen(false)}>Continuer le quiz</Button>
+          <Button onClick={() => setSubmitDialogOpen(false)}>
+            Continuer le quiz
+          </Button>
           <Button onClick={handleSubmit} color="warning" variant="contained">
             Soumettre quand même
           </Button>

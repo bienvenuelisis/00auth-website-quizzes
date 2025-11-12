@@ -14,6 +14,7 @@ import {
   Alert,
   Breadcrumbs,
   Link,
+  Snackbar,
 } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
@@ -28,6 +29,7 @@ import { getModuleById } from '../data/modules';
 import { useQuizStore } from '../stores/quizStore';
 import { getOrGenerateQuiz } from '../services/geminiQuiz';
 import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
+import RegenerateQuizButton from '../components/Quiz/RegenerateQuizButton';
 
 /**
  * ModuleDetail - Page de détails d'un module
@@ -46,6 +48,7 @@ export default function ModuleDetail() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const module = getModuleById(moduleId);
   const canAccess = canAccessModule(moduleId);
@@ -132,6 +135,27 @@ export default function ModuleDetail() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuizRegenerated = (newQuiz) => {
+    console.log(`✅ Nouveau quiz généré avec ${newQuiz.questions.length} questions`);
+
+    // Afficher un message de succès
+    setError(null);
+    setSuccessMessage(`🎉 Nouveau quiz généré avec ${newQuiz.questions.length} questions !`);
+
+    // Optionnel: tracker la régénération
+    analytics.trackQuizGeneration(
+      module.id,
+      module.title,
+      'regenerated',
+      0,
+      false
+    );
+  };
+
+  const handleCloseSuccess = () => {
+    setSuccessMessage(null);
   };
 
   return (
@@ -253,10 +277,17 @@ export default function ModuleDetail() {
 
         {/* Sujets couverts */}
         <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <InfoIcon color="primary" />
-            Sujets Couverts
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <InfoIcon color="text.secondary" />
+              Sujets Couverts
+            </Typography>
+            {/* Bouton de régénération - s'affiche uniquement si un quiz existe en cache */}
+            <RegenerateQuizButton
+              module={module}
+              onQuizRegenerated={handleQuizRegenerated}
+            />
+          </Box>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
             {module.topics.map((topic, index) => (
               <Chip key={index} label={topic} size="small" color="primary" variant="outlined" />
@@ -297,6 +328,18 @@ export default function ModuleDetail() {
             {loading ? 'Génération du quiz...' : stats ? 'Recommencer le quiz' : 'Commencer le quiz'}
           </Button>
         </Box>
+
+        {/* Snackbar de succès */}
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={4000}
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
+            {successMessage}
+          </Alert>
+        </Snackbar>
       </motion.div>
     </Container>
   );
