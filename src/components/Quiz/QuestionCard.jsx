@@ -11,7 +11,6 @@ import {
   Paper,
 } from '@mui/material';
 import { Code as CodeIcon } from '@mui/icons-material';
-import { motion } from 'framer-motion';
 
 /**
  * QuestionCard - Affiche une question avec ses options

@@ -22,6 +22,7 @@ import {
   Lock as LockIcon,
   Info as InfoIcon,
 } from '@mui/icons-material';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { getModuleById } from '../data/modules';
 import { useQuizStore } from '../stores/quizStore';

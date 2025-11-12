@@ -24,7 +24,7 @@ Plateforme de quiz interactive pour valider la progression des apprenants de la 
 
 ## 📁 Structure du Projet
 
-```
+```cmd
 src/
 ├── components/     # Composants réutilisables
 │   ├── Common/     # Boutons, Loaders
@@ -62,7 +62,6 @@ cp .env.example .env
 Renseigner les clés :
 
 - **Firebase** : Console Firebase → Project Settings
-- **Gemini API** : [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 ### 3. Lancer en développement
 
@@ -98,7 +97,7 @@ La formation comprend **3 modules principaux** :
 - Production (Publication stores, CI/CD)
 - Qualité de code (Tests, Performance)
 
-**Total : 14 sous-modules obligatoires + 7 modules bonus**
+### Total : 14 sous-modules obligatoires + 7 modules bonus
 
 ## 🎮 Utilisation
 
@@ -126,7 +125,7 @@ Voir [docs/ARCHITECTURE_MVC_QUIZ.md](docs/ARCHITECTURE_MVC_QUIZ.md) pour détail
 
 ## 🤖 Génération Questions (Gemini API)
 
-Les questions sont générées automatiquement via Gemini Pro :
+Les questions sont générées automatiquement via les modèles Gemini (Firebase AI Logic) :
 
 ```javascript
 // Exemple prompt
@@ -163,7 +162,7 @@ Format JSON strict avec : question, options, correctAnswer, explanation, points
 
 ### Version 2 - Cloud Firestore
 
-```
+```txt
 users/{userId}/quizProgress/{moduleId}/
   - status, bestScore, completedAt
   - attempts (subcollection)
@@ -218,7 +217,7 @@ Ce projet est privé pour la Formation Flutter Avancée 00auth.dev.
 
 ## 📧 Contact
 
-- **Email** : contact@00auth.dev
+- **Email** : <contact@00auth.dev>
 - **Site principal** : [00auth.dev](https://00auth.dev)
 - **Formation** : [00auth.dev/services/formation/flutter-avance](https://00auth.dev/services/formation/flutter-avance)
 

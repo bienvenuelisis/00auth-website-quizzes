@@ -16,7 +16,7 @@ import './index.css';
  */
 
 // Wrapper pour accéder au thème dans le contexte
-function AppWithTheme() {
+export function AppWithTheme() {
   const { theme } = useThemeMode();
 
   return (

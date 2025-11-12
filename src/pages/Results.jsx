@@ -22,6 +22,7 @@ import {
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import confetti from 'canvas-confetti';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getModuleById, getNextModule } from '../data/modules';

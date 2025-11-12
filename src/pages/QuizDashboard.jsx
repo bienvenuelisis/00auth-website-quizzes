@@ -13,6 +13,7 @@ import {
   EmojiEvents as TrophyIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { useQuizStore } from '../stores/quizStore';
 import { MODULES_DATA } from '../data/modules';
