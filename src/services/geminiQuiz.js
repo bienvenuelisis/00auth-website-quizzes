@@ -68,6 +68,24 @@ ${distribution}
 4. Pour les questions à choix multiples, assure-toi que les distracteurs sont plausibles
 5. Les questions de débogage doivent contenir des erreurs subtiles mais réalistes
 
+**FORMATAGE DU CODE (TRÈS IMPORTANT):**
+- Le code DOIT être correctement indenté avec 2 espaces par niveau
+- Utilise des retours à la ligne appropriés pour la lisibilité
+- Formate le code comme tu le ferais dans un IDE professionnel
+- Évite les lignes trop longues (max 80 caractères)
+- Exemple de bon formatage:
+\`\`\`dart
+class MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.0),
+      child: Text('Hello World'),
+    );
+  }
+}
+\`\`\`
+
 **TYPES DE QUESTIONS:**
 
 **multiple-choice:** QCM avec 4 options
@@ -82,15 +100,17 @@ ${distribution}
 
 **code-completion:** Compléter un code
 - Exemple: "Complétez le code pour créer un StatelessWidget"
-- code: snippet de code avec un blanc à remplir
+- code: snippet de code avec un blanc à remplir (BIEN FORMATÉ avec indentation et retours à la ligne)
 - correctAnswer: 0 (une seule bonne réponse parmi les options)
 - options: array de 4 compléments possibles
+- Le code DOIT être lisible avec une indentation appropriée
 
 **code-debugging:** Trouver et corriger l'erreur
 - Exemple: "Ce code contient une erreur. Identifiez-la."
-- code: snippet avec une erreur
+- code: snippet avec une erreur (BIEN FORMATÉ avec indentation et retours à la ligne)
 - correctAnswer: index de la bonne correction
 - options: array de 4 explications/corrections
+- Le code DOIT être lisible avec une indentation appropriée
 
 **POINTS PAR DIFFICULTÉ:**
 - easy: 5-10 points
@@ -104,6 +124,27 @@ ${distribution}
 - code-debugging: 60-90 secondes
 
 Génère exactement ${questionCount} questions variées et pertinentes.`;
+}
+
+/**
+ * Nettoyer et formater le code pour améliorer la lisibilité
+ */
+function formatCodeSnippet(code) {
+  if (!code) return code;
+
+  // Supprimer les espaces en début/fin
+  let formatted = code.trim();
+
+  // Supprimer les balises markdown si présentes
+  formatted = formatted.replace(/^```dart\n?/, '').replace(/\n?```$/, '');
+
+  // Normaliser les retours à la ligne (gérer \r\n et \n)
+  formatted = formatted.replace(/\r\n/g, '\n');
+
+  // Supprimer les lignes vides excessives (max 1 ligne vide consécutive)
+  formatted = formatted.replace(/\n{3,}/g, '\n\n');
+
+  return formatted;
 }
 
 /**
@@ -279,13 +320,13 @@ export async function generateQuiz(moduleData) {
 
     console.log(`✅ Validation terminée: ${validatedQuestions.length} questions valides`);
 
-    // Normaliser les questions validées
+    // Normaliser les questions validées et formater le code
     const normalizedQuestions = validatedQuestions.map((q, index) => ({
       id: q.id || `q${index + 1}`,
       type: q.type,
       difficulty: q.difficulty || moduleData.difficulty,
       question: q.question,
-      code: q.code || null,
+      code: q.code ? formatCodeSnippet(q.code) : null, // Nettoyer et formater le code
       options: q.options || (q.type === 'true-false' ? ['Faux', 'Vrai'] : []),
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
