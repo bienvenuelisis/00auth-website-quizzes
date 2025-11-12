@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { useQuizStore } from '../stores/quizStore';
 import { MODULES_DATA } from '../data/modules';
 import ModuleCard from '../components/Dashboard/ModuleCard';
+import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 
 /**
  * QuizDashboard - Page principale affichant tous les modules
@@ -25,14 +26,32 @@ import ModuleCard from '../components/Dashboard/ModuleCard';
  */
 export default function QuizDashboard() {
   const { initializeUser, getGlobalProgress, userProgress } = useQuizStore();
+  const analytics = useAnalytics();
+
+  // Tracker le temps passé sur le dashboard
+  usePageTimeTracking('dashboard');
 
   useEffect(() => {
     initializeUser();
   }, [initializeUser]);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   const progress = getGlobalProgress();
   const requiredModules = MODULES_DATA.filter((m) => !m.isBonus);
   const bonusModules = MODULES_DATA.filter((m) => m.isBonus);
+
+  // Tracker la vue du dashboard avec les statistiques
+  useEffect(() => {
+    analytics.trackDashboardView(
+      requiredModules.length,
+      userProgress.globalStats.totalModulesCompleted,
+      progress
+    );
+  }, []);
 
   // Animation variants pour les cartes
   const containerVariants = {

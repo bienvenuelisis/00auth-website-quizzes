@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -22,6 +22,7 @@ import { useQuizStore } from '../stores/quizStore';
 import { getModuleById } from '../data/modules';
 import QuestionCard from '../components/Quiz/QuestionCard';
 import ProgressBar from '../components/Quiz/ProgressBar';
+import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 
 /**
  * QuizSession - Page de session de quiz active
@@ -30,6 +31,12 @@ import ProgressBar from '../components/Quiz/ProgressBar';
 export default function QuizSession() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const analytics = useAnalytics();
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const {
     currentSession,
@@ -46,9 +53,15 @@ export default function QuizSession() {
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
 
+  // Tracker le temps par question
+  const questionStartTime = useRef(Date.now());
+
   const module = getModuleById(moduleId);
   const currentQuestion = questions[currentQuestionIndex];
   const selectedAnswer = answers[currentQuestion?.id];
+
+  // Tracker le temps passé sur la page du quiz
+  usePageTimeTracking('quiz_session', moduleId);
 
   useEffect(() => {
     // Si pas de session active, rediriger vers la page du module
@@ -56,6 +69,11 @@ export default function QuizSession() {
       navigate(`/module/${moduleId}`);
     }
   }, [currentSession, moduleId, navigate]);
+
+  // Reset timer when question changes
+  useEffect(() => {
+    questionStartTime.current = Date.now();
+  }, [currentQuestionIndex]);
 
   if (!currentSession || !module || !currentQuestion) {
     return null;
@@ -66,17 +84,41 @@ export default function QuizSession() {
   const allQuestionsAnswered = questions.every((q) => answers[q.id] !== undefined);
 
   const handleAnswerSelect = (answer) => {
+    const timeSpent = Math.floor((Date.now() - questionStartTime.current) / 1000);
+
+    // Tracker la réponse
+    analytics.trackQuestionAnswer(
+      moduleId,
+      currentQuestionIndex,
+      currentQuestion.type,
+      currentQuestion.difficulty,
+      answer === currentQuestion.correctAnswer,
+      timeSpent
+    );
+
     answerQuestion(currentQuestion.id, answer);
   };
 
   const handleNext = () => {
     if (!isLastQuestion) {
+      analytics.trackQuestionNavigation(
+        moduleId,
+        currentQuestionIndex,
+        currentQuestionIndex + 1,
+        'next'
+      );
       nextQuestion();
     }
   };
 
   const handlePrevious = () => {
     if (!isFirstQuestion) {
+      analytics.trackQuestionNavigation(
+        moduleId,
+        currentQuestionIndex,
+        currentQuestionIndex - 1,
+        'previous'
+      );
       previousQuestion();
     }
   };
@@ -86,6 +128,18 @@ export default function QuizSession() {
       setSubmitDialogOpen(true);
       return;
     }
+
+    const answeredCount = Object.keys(answers).length;
+    const unansweredCount = questions.length - answeredCount;
+
+    // Tracker la soumission du quiz
+    analytics.trackQuizSubmit(
+      moduleId,
+      module.title,
+      questions.length,
+      answeredCount,
+      unansweredCount
+    );
 
     // Calculer le score
     const results = calculateScore();
@@ -100,6 +154,16 @@ export default function QuizSession() {
   };
 
   const handleExit = () => {
+    const answeredCount = Object.keys(answers).length;
+
+    // Tracker l'abandon du quiz
+    analytics.trackQuizAbandon(
+      moduleId,
+      currentQuestionIndex,
+      questions.length,
+      answeredCount
+    );
+
     navigate(`/module/${moduleId}`);
   };
 

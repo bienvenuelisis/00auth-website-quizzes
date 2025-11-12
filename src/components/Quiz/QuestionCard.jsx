@@ -11,6 +11,8 @@ import {
   Paper,
 } from '@mui/material';
 import { Code as CodeIcon } from '@mui/icons-material';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 /**
  * QuestionCard - Affiche une question avec ses options

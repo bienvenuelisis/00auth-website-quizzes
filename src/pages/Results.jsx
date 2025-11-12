@@ -27,6 +27,7 @@ import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getModuleById, getNextModule } from '../data/modules';
 import { useQuizStore } from '../stores/quizStore';
+import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 
 /**
  * Results - Page d'affichage des résultats du quiz
@@ -37,10 +38,19 @@ export default function Results() {
   const navigate = useNavigate();
   const location = useLocation();
   const { getModuleStats } = useQuizStore();
+  const analytics = useAnalytics();
 
   const module = getModuleById(moduleId);
   const stats = getModuleStats(moduleId);
   const nextModule = getNextModule(moduleId);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // Tracker le temps passé sur la page des résultats
+  usePageTimeTracking('results', moduleId);
 
   // Récupérer les résultats depuis location.state ou stats
   const results = location.state?.results || stats?.attempts?.[stats.attempts.length - 1];
@@ -49,6 +59,47 @@ export default function Results() {
     if (!results) {
       navigate(`/module/${moduleId}`);
       return;
+    }
+
+    const passed = results.score >= module.minimumScore;
+    const isNewBestScore = !stats || results.score > stats.bestScore;
+
+    // Tracker la vue des résultats
+    analytics.trackResultsView(
+      module.id,
+      module.title,
+      results.score,
+      passed,
+      results.correctCount,
+      results.totalQuestions,
+      results.earnedPoints,
+      results.totalPoints,
+      results.timeSpent,
+      isNewBestScore
+    );
+
+    // Tracker la complétion ou l'échec du module
+    if (passed) {
+      analytics.trackModuleCompletion(
+        module.id,
+        module.title,
+        results.score,
+        stats?.attemptsCount || 1,
+        stats?.totalTimeSpent || results.timeSpent
+      );
+
+      // Tracker le déblocage du module suivant
+      if (nextModule) {
+        analytics.trackModuleUnlock(nextModule.id, nextModule.title, module.id);
+      }
+    } else {
+      analytics.trackModuleFailure(
+        module.id,
+        module.title,
+        results.score,
+        module.minimumScore,
+        stats?.attemptsCount || 1
+      );
     }
 
     // Lancer confetti si score >= 70%
@@ -314,7 +365,14 @@ export default function Results() {
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={() => navigate(`/module/${moduleId}`)}
+            onClick={() => {
+              analytics.trackRetryQuiz(
+                moduleId,
+                results.score,
+                stats?.attemptsCount || 1
+              );
+              navigate(`/module/${moduleId}`);
+            }}
           >
             Recommencer
           </Button>
@@ -323,7 +381,10 @@ export default function Results() {
             <Button
               variant="contained"
               endIcon={<NextIcon />}
-              onClick={() => navigate(`/module/${nextModule.id}`)}
+              onClick={() => {
+                analytics.trackNextModuleClick(moduleId, nextModule.id, results.score);
+                navigate(`/module/${nextModule.id}`);
+              }}
             >
               Module suivant
             </Button>

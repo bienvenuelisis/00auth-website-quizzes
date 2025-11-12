@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createTheme } from '@mui/material/styles';
+import analyticsService from '../services/analyticsService';
 
 const ThemeContext = createContext();
 
@@ -181,6 +182,9 @@ export const ThemeProvider = ({ children }) => {
     const newMode = mode === 'light' ? 'dark' : 'light';
     setMode(newMode);
     localStorage.setItem('quizThemeMode', newMode);
+
+    // Tracker le changement de thème
+    analyticsService.logThemeChange(newMode);
   };
 
   // Écouter les changements de préférence système

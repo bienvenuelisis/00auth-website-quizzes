@@ -17,6 +17,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useQuizStore } from '../../stores/quizStore';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 /**
  * ModuleCard - Carte affichant un module de formation
@@ -25,6 +26,7 @@ import { useQuizStore } from '../../stores/quizStore';
 export default function ModuleCard({ module }) {
   const navigate = useNavigate();
   const { canAccessModule, getModuleStatus, getModuleStats } = useQuizStore();
+  const analytics = useAnalytics();
 
   const canAccess = canAccessModule(module.id);
   const status = getModuleStatus(module.id);
@@ -68,6 +70,14 @@ export default function ModuleCard({ module }) {
 
   const handleClick = () => {
     if (canAccess) {
+      // Tracker le clic sur la carte du module
+      analytics.trackModuleCardClick(
+        module.id,
+        module.title,
+        status === 'completed' || status === 'perfect',
+        !canAccess
+      );
+
       navigate(`/module/${module.id}`);
     }
   };

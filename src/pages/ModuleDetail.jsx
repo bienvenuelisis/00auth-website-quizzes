@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -27,6 +27,7 @@ import { motion } from 'framer-motion';
 import { getModuleById } from '../data/modules';
 import { useQuizStore } from '../stores/quizStore';
 import { getOrGenerateQuiz } from '../services/geminiQuiz';
+import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 
 /**
  * ModuleDetail - Page de détails d'un module
@@ -36,6 +37,12 @@ export default function ModuleDetail() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const { canAccessModule, getModuleStats, startQuizSession } = useQuizStore();
+  const analytics = useAnalytics();
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -43,6 +50,22 @@ export default function ModuleDetail() {
   const module = getModuleById(moduleId);
   const canAccess = canAccessModule(moduleId);
   const stats = getModuleStats(moduleId);
+
+  // Tracker le temps passé sur la page du module
+  usePageTimeTracking('module_detail', moduleId);
+
+  // Tracker la vue du module
+  useEffect(() => {
+    if (module) {
+      analytics.trackModuleDetailView(
+        module.id,
+        module.title,
+        module.isBonus ? 'bonus' : 'required',
+        module.difficulty,
+        canAccess
+      );
+    }
+  }, [moduleId]);
 
   if (!module) {
     return (
@@ -64,8 +87,30 @@ export default function ModuleDetail() {
       setLoading(true);
       setError(null);
 
+      // Tracker le démarrage du quiz
+      const isRetry = stats && stats.attemptsCount > 0;
+      analytics.trackQuizStart(
+        module.id,
+        module.title,
+        isRetry,
+        stats?.bestScore || null
+      );
+
+      const startTime = Date.now();
+
       // Générer ou charger le quiz depuis le cache
       const quiz = await getOrGenerateQuiz(module);
+
+      const generationTime = Date.now() - startTime;
+
+      // Tracker la génération du quiz
+      analytics.trackQuizGeneration(
+        module.id,
+        module.title,
+        'success',
+        generationTime,
+        quiz.fromCache || false
+      );
 
       // Démarrer la session
       startQuizSession(moduleId, quiz.questions);
@@ -74,6 +119,13 @@ export default function ModuleDetail() {
       navigate(`/module/${moduleId}/quiz`);
     } catch (err) {
       console.error('Erreur démarrage quiz:', err);
+
+      // Tracker l'erreur de génération
+      analytics.trackQuizGenerationError(
+        module.id,
+        err.message || 'Erreur inconnue'
+      );
+
       setError(
         "Impossible de générer le quiz. Veuillez réessayer dans quelques instants."
       );
