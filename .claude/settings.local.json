@@ -7,7 +7,8 @@
       "Bash(timeout /t 5)",
       "Bash(cat:*)",
       "Bash(npm install:*)",
-      "Bash(yarn add:*)"
+      "Bash(yarn add:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

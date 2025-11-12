@@ -1772,7 +1772,7 @@ logBadgeUnlocked(badgeId, badgeName) {
 
 **Option A - Sous-domaine:**
 - Site principal: `00auth.dev`
-- Quiz: `quiz.00auth.dev`
+- Quiz: `formations.00auth.dev`
 - Avantages: Séparation claire, déploiements indépendants
 - Inconvénients: Configuration DNS, possibles problèmes CORS
 

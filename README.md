@@ -1,6 +1,9 @@
-# Quiz Formation Flutter Avancée
+# Développer de nouvelles compétences numériques, au quotidien
 
-Plateforme de quiz interactive pour valider la progression des apprenants de la Formation Développeur Mobile Avancé avec Flutter.
+
+Plateforme de ressources complémentaire pour les différentes formations disponibles.
+
+Elle se limite essentiellement actuellement à une plateforme de quiz interactive pour valider la progression des apprenants de la Formation Développeur Mobile Avancé avec Flutter.
 
 ## 🎯 Fonctionnalités
 
