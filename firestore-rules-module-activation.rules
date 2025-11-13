@@ -1,0 +1,64 @@
+/**
+ * Règles de sécurité Firestore pour la collection moduleActivation
+ * À ajouter dans votre fichier firestore.rules principal
+ */
+
+// Règles pour la collection moduleActivation
+match /moduleActivation/{moduleId} {
+  // Lecture : Tous les utilisateurs authentifiés peuvent lire les activations
+  // Cela permet aux participants de voir si un module est disponible
+  allow read: if request.auth != null;
+
+  // Création : Seulement les admins et modérateurs
+  allow create: if request.auth != null
+    && (
+      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true
+    );
+
+  // Mise à jour : Seulement les admins et modérateurs
+  allow update: if request.auth != null
+    && (
+      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true
+    )
+    // Validation : s'assurer que les champs obligatoires sont présents
+    && request.resource.data.keys().hasAll(['moduleId', 'courseId', 'isActive'])
+    // Validation : s'assurer que moduleId ne peut pas être modifié
+    && request.resource.data.moduleId == resource.data.moduleId
+    // Validation : s'assurer que courseId ne peut pas être modifié
+    && request.resource.data.courseId == resource.data.courseId;
+
+  // Suppression : Seulement les admins (pas les modérateurs)
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+}
+
+/**
+ * Instructions d'installation :
+ *
+ * 1. Ouvrez votre fichier firestore.rules principal
+ * 2. Ajoutez ces règles dans la section "rules_version = '2';" et "service cloud.firestore {"
+ * 3. Exemple de structure complète :
+ *
+ *    rules_version = '2';
+ *    service cloud.firestore {
+ *      match /databases/{database}/documents {
+ *
+ *        // ... autres règles existantes (users, progress, etc.)
+ *
+ *        // Règles pour moduleActivation
+ *        match /moduleActivation/{moduleId} {
+ *          allow read: if request.auth != null;
+ *          allow create, update: if request.auth != null
+ *            && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isModerator == true);
+ *          allow delete: if request.auth != null
+ *            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+ *        }
+ *      }
+ *    }
+ *
+ * 4. Déployez les nouvelles règles via la console Firebase ou la CLI :
+ *    firebase deploy --only firestore:rules
+ */

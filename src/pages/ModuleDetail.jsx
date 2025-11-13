@@ -22,6 +22,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Lock as LockIcon,
   Info as InfoIcon,
+  Schedule as ScheduleIcon,
+  Block as BlockIcon,
 } from '@mui/icons-material';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
@@ -32,6 +34,7 @@ import { getOrGenerateQuiz } from '../services/geminiQuiz';
 import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 import RegenerateQuizButton from '../components/Quiz/RegenerateQuizButton';
 import { useAuth } from '../contexts/AuthContext';
+import { useModuleActivation } from '../hooks/useModuleActivation';
 
 /**
  * ModuleDetail - Page de détails d'un module
@@ -43,6 +46,9 @@ export default function ModuleDetail() {
   const { canAccessModule, getModuleStats, startQuizSession } = useQuizStore();
   const { isAuthenticated, profile } = useAuth();
   const analytics = useAnalytics();
+
+  // Vérifier l'activation du module
+  const { isActive: moduleIsActive, status: activationStatus, loading: activationLoading } = useModuleActivation(moduleId);
 
   // Vérifier si l'utilisateur peut accéder aux formations
   const canAccessCourses = isAuthenticated && profile?.accountIsValid && profile?.isActive;
@@ -63,7 +69,7 @@ export default function ModuleDetail() {
 
   const module = getModuleById(moduleId);
   const course = getCourseById(courseId);
-  const canAccess = canAccessModule(courseId, moduleId);
+  const canAccess = canAccessModule(courseId, moduleId) && moduleIsActive;
   const stats = getModuleStats(courseId, moduleId);
 
   // Tracker le temps passé sur la page du module
@@ -202,6 +208,22 @@ export default function ModuleDetail() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Alerte si module inactif */}
+        {!moduleIsActive && activationStatus && (
+          <Alert
+            severity={activationStatus.status === 'scheduled' ? 'info' : 'warning'}
+            icon={activationStatus.status === 'scheduled' ? <ScheduleIcon /> : <BlockIcon />}
+            sx={{ mb: 3 }}
+          >
+            <Typography variant="h6" gutterBottom>
+              {activationStatus.icon} Module non disponible
+            </Typography>
+            <Typography>
+              {activationStatus.message}
+            </Typography>
+          </Alert>
+        )}
+
         {/* En-tête du module */}
         <Paper elevation={3} sx={{ p: 4, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>

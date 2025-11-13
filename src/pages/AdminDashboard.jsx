@@ -44,8 +44,10 @@ import {
   People as PeopleIcon,
   School as SchoolIcon,
   Quiz as QuizIcon,
-  TrendingUp as TrendingIcon
+  TrendingUp as TrendingIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import {
   getAllUsers,
@@ -121,6 +123,7 @@ function PlatformStatsCards({ stats }) {
  * Composant principal d'administration
  */
 function AdminDashboardContent() {
+  const navigate = useNavigate();
   const { canManageUsers, canValidateAccounts } = usePermissions();
   const [users, setUsers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -282,13 +285,22 @@ function AdminDashboardContent() {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* En-tête */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-          Administration
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Gérez les utilisateurs, validez les comptes et suivez les statistiques de la plateforme
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            Administration
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Gérez les utilisateurs, validez les comptes et suivez les statistiques de la plateforme
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          startIcon={<SettingsIcon />}
+          onClick={() => navigate('/admin/modules')}
+        >
+          Gérer les Modules
+        </Button>
       </Box>
 
       {/* Statistiques de la plateforme */}

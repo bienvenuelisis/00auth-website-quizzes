@@ -8,6 +8,8 @@ import {
   Chip,
   Box,
   LinearProgress,
+  Alert,
+  Skeleton,
 } from '@mui/material';
 import {
   Lock as LockIcon,
@@ -15,9 +17,12 @@ import {
   Star as StarIcon,
   PlayArrow as PlayArrowIcon,
   Refresh as RefreshIcon,
+  Schedule as ScheduleIcon,
+  Block as BlockIcon,
 } from '@mui/icons-material';
 import { useQuizStore } from '../../stores/quizStore';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import { useModuleActivation } from '../../hooks/useModuleActivation';
 
 /**
  * ModuleCard - Carte affichant un module de formation
@@ -33,9 +38,25 @@ export default function ModuleCard({ module, courseId }) {
   // Utiliser le courseId du module ou celui passé en props
   const moduleCourseId = courseId || module.courseId;
 
-  const canAccess = canAccessModule(moduleCourseId, module.id);
+  // Vérifier l'activation du module
+  const { isActive: moduleIsActive, status: activationStatus, loading: activationLoading } = useModuleActivation(module.id);
+
+  const canAccess = canAccessModule(moduleCourseId, module.id) && moduleIsActive;
   const status = getModuleStatus(moduleCourseId, module.id);
   const stats = getModuleStats(moduleCourseId, module.id);
+
+  // Si le module est en cours de chargement
+  if (activationLoading) {
+    return (
+      <Card sx={{ height: '100%' }}>
+        <CardContent>
+          <Skeleton variant="text" height={40} />
+          <Skeleton variant="text" height={60} sx={{ mt: 2 }} />
+          <Skeleton variant="rectangular" height={40} sx={{ mt: 2 }} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Configuration de l'affichage selon le statut
   const statusConfig = {
@@ -120,6 +141,17 @@ export default function ModuleCard({ module, courseId }) {
       )}
 
       <CardContent sx={{ flexGrow: 1 }}>
+        {/* Alerte si module inactif */}
+        {!moduleIsActive && activationStatus && (
+          <Alert
+            severity={activationStatus.status === 'scheduled' ? 'info' : 'warning'}
+            icon={activationStatus.status === 'scheduled' ? <ScheduleIcon /> : <BlockIcon />}
+            sx={{ mb: 2, fontSize: '0.875rem' }}
+          >
+            {activationStatus.message}
+          </Alert>
+        )}
+
         {/* Titre */}
         <Typography
           variant="h6"

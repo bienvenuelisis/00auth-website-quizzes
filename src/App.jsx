@@ -13,9 +13,11 @@ import Results from './pages/Results';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminModules from './pages/AdminModules';
 import StudentProgressTracker from './pages/StudentProgressTracker';
 import { usePageTracking } from './hooks/useAnalytics';
 import analyticsService from './services/analyticsService';
+import './scripts/migrateModules'; // Charger les helpers de migration
 
 /**
  * Composants de redirection pour les routes legacy
@@ -101,6 +103,7 @@ function AppContent() {
 
           {/* Administration */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/modules" element={<AdminModules />} />
           <Route path="/admin/progress" element={<StudentProgressTracker />} />
 
           {/* Dashboard d'une formation - Liste des modules */}
