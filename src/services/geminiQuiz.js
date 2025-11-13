@@ -24,11 +24,20 @@ const quizSchema = Schema.object({
           options: Schema.array({ items: Schema.string() }), // Pour multiple-choice
           correctAnswer: Schema.number(), // Index de la bonne réponse ou 0/1 pour true-false
           explanation: Schema.string(),
+          resources: Schema.array({
+            items: Schema.object({
+              properties: {
+                title: Schema.string(),
+                url: Schema.string(),
+                type: Schema.enumString({ enum: ['documentation', 'article', 'video', 'tutorial'] })
+              }
+            })
+          }),
           points: Schema.number(),
           timeLimit: Schema.number(),
           tags: Schema.array({ items: Schema.string() }),
         },
-        optionalProperties: ['code', 'options'], // code et options sont facultatifs
+        optionalProperties: ['code', 'options', 'resources'], // code, options et resources sont facultatifs
       }),
     }),
   }
@@ -64,9 +73,10 @@ ${distribution}
 **CONTRAINTES IMPORTANTES:**
 1. Les questions doivent tester la COMPRÉHENSION PROFONDE, pas la simple mémorisation
 2. Utilise des exemples de code réalistes et pratiques
-3. Les explications doivent être claires et pédagogiques en français
-4. Pour les questions à choix multiples, assure-toi que les distracteurs sont plausibles
-5. Les questions de débogage doivent contenir des erreurs subtiles mais réalistes
+3. Les explications doivent être claires, pédagogiques et détaillées en français
+4. Pour chaque question, fournis 2-3 ressources complémentaires (documentation officielle, articles, tutoriels, vidéos) pour approfondir
+5. Pour les questions à choix multiples, assure-toi que les distracteurs sont plausibles
+6. Les questions de débogage doivent contenir des erreurs subtiles mais réalistes
 
 **FORMATAGE DU CODE (TRÈS IMPORTANT):**
 - Le code DOIT être correctement indenté avec 2 espaces par niveau
@@ -92,11 +102,15 @@ class MyWidget extends StatelessWidget {
 - Exemple: "Quelle est la différence entre StatelessWidget et StatefulWidget ?"
 - correctAnswer: index de la bonne réponse (0-3)
 - options: array de 4 chaînes de caractères
+- explanation: explication détaillée de la bonne réponse et pourquoi les autres options sont incorrectes
+- resources: 2-3 liens vers la documentation ou des articles pertinents
 
 **true-false:** Vrai ou Faux
 - Exemple: "Flutter utilise le langage Dart"
 - correctAnswer: 1 pour vrai, 0 pour faux
 - options: ["Faux", "Vrai"] (toujours dans cet ordre)
+- explanation: explication détaillée avec contexte et nuances
+- resources: 2-3 liens pour approfondir le sujet
 
 **code-completion:** Compléter un code
 - Exemple: "Complétez le code pour créer un StatelessWidget"
@@ -104,6 +118,8 @@ class MyWidget extends StatelessWidget {
 - correctAnswer: 0 (une seule bonne réponse parmi les options)
 - options: array de 4 compléments possibles
 - Le code DOIT être lisible avec une indentation appropriée
+- explanation: explication détaillée de la solution correcte et des erreurs communes
+- resources: liens vers la documentation et des exemples pratiques
 
 **code-debugging:** Trouver et corriger l'erreur
 - Exemple: "Ce code contient une erreur. Identifiez-la."
@@ -111,6 +127,8 @@ class MyWidget extends StatelessWidget {
 - correctAnswer: index de la bonne correction
 - options: array de 4 explications/corrections
 - Le code DOIT être lisible avec une indentation appropriée
+- explanation: explication détaillée de l'erreur, pourquoi elle se produit et comment la corriger
+- resources: liens vers la documentation sur les bonnes pratiques et patterns corrects
 
 **POINTS PAR DIFFICULTÉ:**
 - easy: 5-10 points
@@ -330,6 +348,7 @@ export async function generateQuiz(moduleData) {
       options: q.options || (q.type === 'true-false' ? ['Faux', 'Vrai'] : []),
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
+      resources: q.resources || [], // Ressources complémentaires
       points: q.points || 10,
       timeLimit: q.timeLimit || 30,
       tags: q.tags || moduleData.topics.slice(0, 3),

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation, Link as RouterLink, Navigate } from 'react-router-dom';
 import {
   Container,
@@ -12,6 +12,14 @@ import {
   Divider,
   Alert,
   Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Link,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   CheckCircle as SuccessIcon,
@@ -20,6 +28,12 @@ import {
   Refresh as RefreshIcon,
   NavigateNext as NextIcon,
   EmojiEvents as TrophyIcon,
+  ExpandMore as ExpandIcon,
+  Link as LinkIcon,
+  MenuBook as ResourceIcon,
+  Article as ArticleIcon,
+  VideoLibrary as VideoIcon,
+  School as TutorialIcon,
 } from '@mui/icons-material';
 import confetti from 'canvas-confetti';
 // eslint-disable-next-line no-unused-vars
@@ -64,8 +78,10 @@ export default function Results() {
   // Tracker le temps passé sur la page des résultats
   usePageTimeTracking('results', moduleId);
 
-  // Récupérer les résultats depuis location.state ou stats
+  // Récupérer les résultats, questions et réponses depuis location.state
   const results = location.state?.results || stats?.attempts?.[stats.attempts.length - 1];
+  const questions = location.state?.questions || [];
+  const userAnswers = location.state?.answers || {};
 
   useEffect(() => {
     if (!results) {
@@ -149,6 +165,28 @@ export default function Results() {
   }
 
   const passed = results.score >= module.minimumScore;
+
+  // Filtrer les questions avec réponses incorrectes
+  const incorrectQuestions = questions.filter(q => {
+    const answer = userAnswers[q.id];
+    return answer && !answer.correct;
+  });
+
+  // Helper pour obtenir l'icône selon le type de ressource
+  const getResourceIcon = (type) => {
+    switch (type) {
+      case 'documentation':
+        return <ResourceIcon fontSize="small" />;
+      case 'article':
+        return <ArticleIcon fontSize="small" />;
+      case 'video':
+        return <VideoIcon fontSize="small" />;
+      case 'tutorial':
+        return <TutorialIcon fontSize="small" />;
+      default:
+        return <LinkIcon fontSize="small" />;
+    }
+  };
 
   // Données pour le graphique
   const chartData = [
@@ -355,6 +393,116 @@ export default function Results() {
             </Card>
           </Grid>
         </Grid>
+
+        {/* Section de révision des erreurs */}
+        {incorrectQuestions.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h5" gutterBottom fontWeight="600" sx={{ mb: 2 }}>
+              📚 Révision des erreurs
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Consultez les explications détaillées et les ressources pour approfondir vos connaissances sur les questions manquées.
+            </Typography>
+
+            {incorrectQuestions.map((question) => (
+              <Accordion key={question.id} sx={{ mb: 2 }}>
+                <AccordionSummary expandIcon={<ExpandIcon />}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                    <ErrorIcon color="error" />
+                    <Typography fontWeight="500" sx={{ flexGrow: 1 }}>
+                      Question {questions.indexOf(question) + 1}: {question.question}
+                    </Typography>
+                    <Chip label={question.type} size="small" variant="outlined" />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box>
+                    {/* Code si applicable */}
+                    {question.code && (
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          bgcolor: 'grey.100',
+                          fontFamily: 'monospace',
+                          fontSize: '0.9rem',
+                          mb: 2,
+                          whiteSpace: 'pre-wrap',
+                          overflowX: 'auto'
+                        }}
+                      >
+                        {question.code}
+                      </Paper>
+                    )}
+
+                    {/* Réponse de l'utilisateur */}
+                    <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                        ❌ Votre réponse :
+                      </Typography>
+                      <Typography variant="body2">
+                        {question.options[userAnswers[question.id]?.selected]}
+                      </Typography>
+                    </Box>
+
+                    {/* Bonne réponse */}
+                    <Box sx={{ mb: 2, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                        ✅ Bonne réponse :
+                      </Typography>
+                      <Typography variant="body2">
+                        {question.options[question.correctAnswer]}
+                      </Typography>
+                    </Box>
+
+                    {/* Explication */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom color="primary">
+                        💡 Explication
+                      </Typography>
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {question.explanation}
+                      </Typography>
+                    </Box>
+
+                    {/* Ressources complémentaires */}
+                    {question.resources && question.resources.length > 0 && (
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight="600" gutterBottom color="secondary">
+                          📖 Ressources pour approfondir
+                        </Typography>
+                        <List dense>
+                          {question.resources.map((resource, idx) => (
+                            <ListItem key={idx} disablePadding>
+                              <ListItemIcon sx={{ minWidth: 36 }}>
+                                {getResourceIcon(resource.type)}
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={
+                                  <Link
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    underline="hover"
+                                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                                  >
+                                    {resource.title}
+                                    <LinkIcon fontSize="inherit" />
+                                  </Link>
+                                }
+                                secondary={resource.type}
+                              />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Box>
+        )}
 
         {/* Actions */}
         <Box

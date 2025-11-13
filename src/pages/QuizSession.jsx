@@ -171,9 +171,13 @@ export default function QuizSession() {
     // Sauvegarder la tentative (local + Firebase via useProgressSync)
     saveAttempt(courseId, moduleId, results, answers);
 
-    // Naviguer vers la page de résultats
+    // Naviguer vers la page de résultats avec les questions et réponses
     navigate(`/course/${courseId}/module/${moduleId}/results`, {
-      state: { results },
+      state: {
+        results,
+        questions,
+        answers
+      },
     });
   };
 
