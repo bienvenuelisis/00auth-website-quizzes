@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import {
   Container,
   Box,
@@ -23,20 +23,31 @@ import { getModuleById } from "../data/modules";
 import QuestionCard from "../components/Quiz/QuestionCard";
 import ProgressBar from "../components/Quiz/ProgressBar";
 import { useAnalytics, usePageTimeTracking } from "../hooks/useAnalytics";
+import { useAuth } from "../contexts/AuthContext";
+import { useProgressSync } from "../hooks/useProgressSync";
 
 /**
  * QuizSession - Page de session de quiz active
  * Gère l'affichage des questions, la navigation et la soumission
  */
 export default function QuizSession() {
-  const { moduleId } = useParams();
+  const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, profile } = useAuth();
   const analytics = useAnalytics();
+
+  // Vérifier si l'utilisateur peut accéder aux formations
+  const canAccessCourses = isAuthenticated && profile?.accountIsValid && profile?.isActive;
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  // Rediriger vers la page d'accueil si l'utilisateur n'a pas accès
+  if (!canAccessCourses) {
+    return <Navigate to="/" replace />;
+  }
 
   const {
     currentSession,
@@ -47,8 +58,10 @@ export default function QuizSession() {
     nextQuestion,
     previousQuestion,
     calculateScore,
-    saveQuizAttempt,
   } = useQuizStore();
+
+  // Hook pour synchroniser avec Firebase
+  const { saveAttempt } = useProgressSync();
 
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
@@ -66,9 +79,9 @@ export default function QuizSession() {
   useEffect(() => {
     // Si pas de session active, rediriger vers la page du module
     if (!currentSession || currentSession.moduleId !== moduleId) {
-      navigate(`/module/${moduleId}`);
+      navigate(`/course/${courseId}/module/${moduleId}`);
     }
-  }, [currentSession, moduleId, navigate]);
+  }, [currentSession, moduleId, courseId, navigate]);
 
   // Reset timer when question changes
   useEffect(() => {
@@ -148,11 +161,18 @@ export default function QuizSession() {
     // Calculer le score
     const results = calculateScore();
 
-    // Sauvegarder la tentative
-    saveQuizAttempt(moduleId, results);
+    console.log('🟡 [QuizSession] Sauvegarde du quiz avec saveAttempt:', {
+      courseId,
+      moduleId,
+      results,
+      answers
+    });
+
+    // Sauvegarder la tentative (local + Firebase via useProgressSync)
+    saveAttempt(courseId, moduleId, results, answers);
 
     // Naviguer vers la page de résultats
-    navigate(`/module/${moduleId}/results`, {
+    navigate(`/course/${courseId}/module/${moduleId}/results`, {
       state: { results },
     });
   };
@@ -168,7 +188,7 @@ export default function QuizSession() {
       answeredCount
     );
 
-    navigate(`/module/${moduleId}`);
+    navigate(`/course/${courseId}/module/${moduleId}`);
   };
 
   return (

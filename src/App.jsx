@@ -1,22 +1,49 @@
 import { useEffect, useRef } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Box } from '@mui/material';
+import { AuthProvider } from './contexts/AuthContext';
+import { useProgressSync } from './hooks/useProgressSync';
 import Navbar from './components/Layout/Navbar';
 import Footer from './components/Layout/Footer';
 import QuizDashboard from './pages/QuizDashboard';
+import CourseDashboard from './pages/CourseDashboard';
 import ModuleDetail from './pages/ModuleDetail';
 import QuizSession from './pages/QuizSession';
 import Results from './pages/Results';
+import AuthPage from './pages/AuthPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminDashboard from './pages/AdminDashboard';
+import StudentProgressTracker from './pages/StudentProgressTracker';
 import { usePageTracking } from './hooks/useAnalytics';
 import analyticsService from './services/analyticsService';
 
 /**
- * Composant App principal
- * Configure le routing et la structure de l'application
+ * Composants de redirection pour les routes legacy
  */
-function App() {
+const RedirectToModule = () => {
+  const { moduleId } = useParams();
+  return <Navigate to={`/course/flutter-advanced/module/${moduleId}`} replace />;
+};
+
+const RedirectToQuiz = () => {
+  const { moduleId } = useParams();
+  return <Navigate to={`/course/flutter-advanced/module/${moduleId}/quiz`} replace />;
+};
+
+const RedirectToResults = () => {
+  const { moduleId } = useParams();
+  return <Navigate to={`/course/flutter-advanced/module/${moduleId}/results`} replace />;
+};
+
+/**
+ * Composant interne avec accès aux hooks Auth
+ */
+function AppContent() {
   // Tracker automatiquement les changements de page
   usePageTracking();
+
+  // Synchroniser automatiquement la progression
+  useProgressSync();
 
   // Tracker la session utilisateur
   const sessionStartTime = useRef(Date.now());
@@ -63,17 +90,35 @@ function App() {
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Routes>
-          {/* Dashboard - Liste des modules */}
+          {/* Dashboard - Liste des formations */}
           <Route path="/" element={<QuizDashboard />} />
 
+          {/* Authentification */}
+          <Route path="/auth" element={<AuthPage />} />
+
+          {/* Profil utilisateur */}
+          <Route path="/profile" element={<ProfilePage />} />
+
+          {/* Administration */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/progress" element={<StudentProgressTracker />} />
+
+          {/* Dashboard d'une formation - Liste des modules */}
+          <Route path="/course/:courseId" element={<CourseDashboard />} />
+
           {/* Détails d'un module */}
-          <Route path="/module/:moduleId" element={<ModuleDetail />} />
+          <Route path="/course/:courseId/module/:moduleId" element={<ModuleDetail />} />
 
           {/* Session de quiz active */}
-          <Route path="/module/:moduleId/quiz" element={<QuizSession />} />
+          <Route path="/course/:courseId/module/:moduleId/quiz" element={<QuizSession />} />
 
           {/* Résultats du quiz */}
-          <Route path="/module/:moduleId/results" element={<Results />} />
+          <Route path="/course/:courseId/module/:moduleId/results" element={<Results />} />
+
+          {/* Routes legacy (redirection vers flutter-advanced) */}
+          <Route path="/module/:moduleId" element={<RedirectToModule />} />
+          <Route path="/module/:moduleId/quiz" element={<RedirectToQuiz />} />
+          <Route path="/module/:moduleId/results" element={<RedirectToResults />} />
 
           {/* Redirection pour routes non trouvées */}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -83,6 +128,17 @@ function App() {
       {/* Footer */}
       <Footer />
     </Box>
+  );
+}
+
+/**
+ * Composant App principal avec AuthProvider
+ */
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

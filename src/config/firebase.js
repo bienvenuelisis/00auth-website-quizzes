@@ -1,8 +1,9 @@
-import { initializeApp } from 'firebase/app';
-import { getAnalytics, isSupported } from 'firebase/analytics';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getAI, GoogleAIBackend } from 'firebase/ai';
+import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAI, GoogleAIBackend } from "firebase/ai";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,7 +12,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -26,14 +27,14 @@ let analytics = null;
 let analyticsReady = false;
 
 const initAnalytics = async () => {
-  const analyticsEnabled = import.meta.env.VITE_ANALYTICS_ENABLED === 'true';
+  const analyticsEnabled = import.meta.env.VITE_ANALYTICS_ENABLED === "true";
 
-  if (analyticsEnabled && await isSupported()) {
+  if (analyticsEnabled && (await isSupported())) {
     analytics = getAnalytics(app);
     analyticsReady = true;
-    console.log('Firebase Analytics initialized for Quiz');
+    console.log("Firebase Analytics initialized for Quiz");
   } else {
-    console.log('Firebase Analytics disabled or not supported');
+    console.log("Firebase Analytics disabled or not supported");
   }
 };
 
@@ -43,7 +44,10 @@ initAnalytics();
 const auth = getAuth(app);
 
 // Firestore (for V2)
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 
-export { app, ai, analytics, auth, firestore };
+// Storage (for V2)
+const storage = getStorage(app);
+
+export { app, ai, analytics, auth, db, storage };
 export const isAnalyticsReady = () => analyticsReady;

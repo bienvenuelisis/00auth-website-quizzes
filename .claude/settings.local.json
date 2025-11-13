@@ -8,7 +8,10 @@
       "Bash(cat:*)",
       "Bash(npm install:*)",
       "Bash(yarn add:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(node add-courseId.js:*)",
+      "Bash(del add-courseId.js)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

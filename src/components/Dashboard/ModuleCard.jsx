@@ -22,15 +22,20 @@ import { useAnalytics } from '../../hooks/useAnalytics';
 /**
  * ModuleCard - Carte affichant un module de formation
  * Montre le statut, le meilleur score et permet de démarrer le quiz
+ * @param {Object} module - Données du module
+ * @param {string} courseId - ID de la formation parente
  */
-export default function ModuleCard({ module }) {
+export default function ModuleCard({ module, courseId }) {
   const navigate = useNavigate();
   const { canAccessModule, getModuleStatus, getModuleStats } = useQuizStore();
   const analytics = useAnalytics();
 
-  const canAccess = canAccessModule(module.id);
-  const status = getModuleStatus(module.id);
-  const stats = getModuleStats(module.id);
+  // Utiliser le courseId du module ou celui passé en props
+  const moduleCourseId = courseId || module.courseId;
+
+  const canAccess = canAccessModule(moduleCourseId, module.id);
+  const status = getModuleStatus(moduleCourseId, module.id);
+  const stats = getModuleStats(moduleCourseId, module.id);
 
   // Configuration de l'affichage selon le statut
   const statusConfig = {
@@ -78,7 +83,7 @@ export default function ModuleCard({ module }) {
         !canAccess
       );
 
-      navigate(`/module/${module.id}`);
+      navigate(`/course/${moduleCourseId}/module/${module.id}`);
     }
   };
 

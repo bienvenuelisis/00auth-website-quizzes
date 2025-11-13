@@ -5,63 +5,102 @@ import {
   Grid,
   Box,
   Paper,
-  LinearProgress,
-  Divider,
   Chip,
+  Alert,
+  Button,
 } from '@mui/material';
 import {
-  EmojiEvents as TrophyIcon,
   School as SchoolIcon,
+  TrendingUp as TrendingIcon,
+  Lock as LockIcon,
+  Login as LoginIcon,
 } from '@mui/icons-material';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../stores/quizStore';
-import { MODULES_DATA } from '../data/modules';
-import ModuleCard from '../components/Dashboard/ModuleCard';
+import { getPublishedCourses } from '../data/courses';
+import { getModulesByCourse } from '../data/modules';
+import CourseCard from '../components/Dashboard/CourseCard';
 import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
- * QuizDashboard - Page principale affichant tous les modules
- * Montre la progression globale et la liste des modules
+ * QuizDashboard - Page d'accueil affichant toutes les formations
+ * Montre les formations disponibles avec leur progression
  */
 export default function QuizDashboard() {
-  const { initializeUser, getGlobalProgress, userProgress } = useQuizStore();
+  const { initializeUser, userProgress } = useQuizStore();
+  const { isAuthenticated, profile } = useAuth();
   const analytics = useAnalytics();
+  const navigate = useNavigate();
 
-  // Tracker le temps passé sur le dashboard
+  // Vérifier si l'utilisateur peut accéder aux formations
+  const canAccessCourses = isAuthenticated && profile?.accountIsValid && profile?.isActive;
+
   usePageTimeTracking('dashboard');
 
   useEffect(() => {
-    initializeUser();
-  }, [initializeUser]);
+    if (canAccessCourses) {
+      initializeUser();
+    }
+  }, [initializeUser, canAccessCourses]);
 
-  // Scroll to top when component mounts
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const progress = getGlobalProgress();
-  const requiredModules = MODULES_DATA.filter((m) => !m.isBonus);
-  const bonusModules = MODULES_DATA.filter((m) => m.isBonus);
+  const courses = getPublishedCourses();
 
-  // Tracker la vue du dashboard avec les statistiques
+  // Calculer la progression pour chaque formation
+  const getCoursesWithProgress = () => {
+    if (!canAccessCourses) {
+      return courses.map(course => ({ course, progress: 0, stats: null }));
+    }
+
+    return courses.map(course => {
+      const courseProgress = userProgress.courses?.[course.id];
+      const modules = getModulesByCourse(course.id);
+      const requiredModules = modules.filter(m => !m.isBonus);
+
+      if (!courseProgress || requiredModules.length === 0) {
+        return { course, progress: 0, stats: null };
+      }
+
+      const completedModules = requiredModules.filter(m => {
+        const moduleProgress = courseProgress.modules[m.id];
+        return moduleProgress && (moduleProgress.status === 'completed' || moduleProgress.status === 'perfect');
+      }).length;
+
+      const progress = Math.round((completedModules / requiredModules.length) * 100);
+
+      return {
+        course,
+        progress,
+        stats: courseProgress.stats
+      };
+    });
+  };
+
+  const coursesWithProgress = getCoursesWithProgress();
+  const totalCoursesStarted = coursesWithProgress.filter(c => c.progress > 0).length;
+  const totalCoursesCompleted = coursesWithProgress.filter(c => c.progress === 100).length;
+
   useEffect(() => {
-    analytics.trackDashboardView(
-      requiredModules.length,
-      userProgress.globalStats.totalModulesCompleted,
-      progress
-    );
-  }, []);
+    if (canAccessCourses) {
+      analytics.trackDashboardView(
+        courses.length,
+        totalCoursesCompleted,
+        userProgress.globalStats.averageScore || 0
+      );
+    }
+  }, [canAccessCourses]);
 
-  // Animation variants pour les cartes
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+      transition: { staggerChildren: 0.1 }
+    }
   };
 
   const itemVariants = {
@@ -69,149 +108,182 @@ export default function QuizDashboard() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.5,
-      },
-    },
+      transition: { duration: 0.5 }
+    }
   };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* En-tête */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography
-          variant="h3"
+          variant="h2"
           component="h1"
           gutterBottom
           sx={{
             fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: 2,
+            flexWrap: 'wrap'
           }}
         >
-          <SchoolIcon sx={{ fontSize: 48, color: 'secondary.main' }} />
-          Formation Flutter Avancée
+          <SchoolIcon sx={{ fontSize: 56, color: 'secondary.main' }} />
+          Mes Formations
         </Typography>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          Quiz de validation des modules
+        <Typography variant="h6" color="text.secondary">
+          Développez vos compétences en développement mobile
         </Typography>
       </Box>
 
-      {/* Carte de progression globale */}
-      <Paper
-        elevation={2}
-        sx={{
-          p: 3,
-          mb: 4,
-          background: (theme) =>
-            theme.palette.mode === 'light'
-              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-              : 'linear-gradient(135deg, #434343 0%, #000000 100%)',
-          color: 'white',
-        }}
-      >
-        <Box
+      {/* Message pour utilisateurs non connectés, non validés ou désactivés */}
+      {!canAccessCourses && (
+        <Alert
+          severity={!isAuthenticated ? "info" : profile && !profile.isActive ? "error" : "warning"}
+          icon={<LockIcon />}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 2,
-            flexWrap: 'wrap',
-            gap: 2,
+            mb: 4,
+            '& .MuiAlert-message': {
+              width: '100%'
+            }
+          }}
+          action={
+            !isAuthenticated ? (
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<LoginIcon />}
+                onClick={() => navigate('/auth')}
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Se connecter
+              </Button>
+            ) : null
+          }
+        >
+          {!isAuthenticated ? (
+            <>
+              <Typography variant="body1" fontWeight="600" gutterBottom>
+                Connectez-vous pour accéder aux formations
+              </Typography>
+              <Typography variant="body2">
+                Créez un compte ou connectez-vous pour commencer votre parcours d'apprentissage et suivre votre progression.
+              </Typography>
+            </>
+          ) : profile && !profile.isActive ? (
+            <>
+              <Typography variant="body1" fontWeight="600" gutterBottom>
+                Compte non approuvé
+              </Typography>
+              <Typography variant="body2">
+                Votre compte n'a pas encore été approuvé. Veuillez contacter un administrateur pour plus d'informations.
+              </Typography>
+            </>
+          ) : profile && !profile.accountIsValid ? (
+            <>
+              <Typography variant="body1" fontWeight="600" gutterBottom>
+                Compte en attente de validation
+              </Typography>
+              <Typography variant="body2">
+                Votre compte est en attente de validation par un administrateur. Vous recevrez un accès aux formations une fois votre compte validé.
+              </Typography>
+            </>
+          ) : null}
+        </Alert>
+      )}
+
+      {/* Carte de statistiques globales */}
+      {canAccessCourses && userProgress.globalStats.totalQuizzesTaken > 0 && (
+        <Paper
+          elevation={2}
+          sx={{
+            p: 3,
+            mb: 4,
+            background: (theme) =>
+              theme.palette.mode === 'light'
+                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                : 'linear-gradient(135deg, #434343 0%, #000000 100%)',
+            color: 'white'
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <TrophyIcon sx={{ fontSize: 40 }} />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <TrendingIcon sx={{ fontSize: 40 }} />
             <Box>
               <Typography variant="h5" fontWeight="bold">
-                Progression Globale
+                Vos Statistiques Globales
               </Typography>
               <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                {userProgress.globalStats.totalModulesCompleted} sur{' '}
-                {requiredModules.length} modules validés
+                Progression dans toutes les formations
               </Typography>
             </Box>
           </Box>
-          <Typography variant="h3" fontWeight="bold">
-            {progress}%
-          </Typography>
-        </Box>
 
-        <LinearProgress
-          variant="determinate"
-          value={progress}
-          sx={{
-            height: 12,
-            borderRadius: 6,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#c9b037',
-            },
-          }}
-        />
+          <Grid container spacing={3}>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold">
+                  {totalCoursesStarted}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Formations démarrées
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold">
+                  {totalCoursesCompleted}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Formations complétées
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold">
+                  {userProgress.globalStats.totalQuizzesTaken}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Quiz passés
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="h4" fontWeight="bold">
+                  {userProgress.globalStats.averageScore}%
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Score moyen
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
 
-        {/* Statistiques */}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 3,
-            mt: 3,
-            flexWrap: 'wrap',
-          }}
-        >
-          <Box>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Quiz complétés
-            </Typography>
-            <Typography variant="h6" fontWeight="bold">
-              {userProgress.globalStats.totalQuizzesTaken}
-            </Typography>
-          </Box>
-          <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />
-          <Box>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Score moyen
-            </Typography>
-            <Typography variant="h6" fontWeight="bold">
-              {userProgress.globalStats.averageScore}%
-            </Typography>
-          </Box>
-          <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />
-          <Box>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              Temps total
-            </Typography>
-            <Typography variant="h6" fontWeight="bold">
-              {Math.round(userProgress.globalStats.totalTimeSpent / 60)} min
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Modules Obligatoires */}
-      <Box sx={{ mb: 4 }}>
+      {/* Liste des formations */}
+      <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
           <Typography variant="h4" component="h2" fontWeight="600">
-            Modules Obligatoires
+            Formations Disponibles
           </Typography>
-          <Chip
-            label={`${requiredModules.length} modules`}
-            color="primary"
-            size="small"
-          />
+          <Chip label={`${courses.length} formation${courses.length > 1 ? 's' : ''}`} color="primary" />
         </Box>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
           <Grid container spacing={3}>
-            {requiredModules.map((module) => (
-              <Grid item xs={12} sm={6} md={4} key={module.id}>
+            {coursesWithProgress.map(({ course, progress, stats }) => (
+              <Grid item xs={12} md={6} key={course.id}>
                 <motion.div variants={itemVariants}>
-                  <ModuleCard module={module} />
+                  <CourseCard
+                    course={course}
+                    progress={progress}
+                    stats={stats}
+                    isLocked={!canAccessCourses}
+                  />
                 </motion.div>
               </Grid>
             ))}
@@ -219,36 +291,14 @@ export default function QuizDashboard() {
         </motion.div>
       </Box>
 
-      {/* Modules Bonus */}
-      {bonusModules.length > 0 && (
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Typography variant="h4" component="h2" fontWeight="600">
-              Modules Bonus
-            </Typography>
-            <Chip
-              label={`${bonusModules.length} modules`}
-              color="secondary"
-              size="small"
-            />
-          </Box>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Grid container spacing={3}>
-              {bonusModules.map((module) => (
-                <Grid item xs={12} sm={6} md={4} key={module.id}>
-                  <motion.div variants={itemVariants}>
-                    <ModuleCard module={module} />
-                  </motion.div>
-                </Grid>
-              ))}
-            </Grid>
-          </motion.div>
-        </Box>
+      {/* Message si aucune formation */}
+      {courses.length === 0 && (
+        <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'action.hover' }}>
+          <SchoolIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary">
+            Aucune formation disponible pour le moment
+          </Typography>
+        </Paper>
       )}
     </Container>
   );

@@ -7,6 +7,7 @@ export const MODULES_DATA = [
   // ==================== MODULE 0: FONDAMENTAUX ====================
   {
     id: 'module-0-1-dev-informatique',
+    courseId: 'flutter-advanced',
     title: 'Introduction au développement informatique',
     description: 'Découvrez les bases de la programmation et du développement logiciel',
     parentModuleId: 'module-0-fondamentaux',
@@ -29,6 +30,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-0-2-mobile-ecosysteme',
+    courseId: 'flutter-advanced',
     title: 'Introduction au développement mobile et à l\'écosystème',
     description: 'Comprenez les écosystèmes Android et iOS',
     parentModuleId: 'module-0-fondamentaux',
@@ -51,6 +53,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-0-3-flutter-comparaison',
+    courseId: 'flutter-advanced',
     title: 'Flutter et comparaisons avec les autres outils',
     description: 'Comparez Flutter aux alternatives natives et cross-platform',
     parentModuleId: 'module-0-fondamentaux',
@@ -73,6 +76,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-0-4-flutter-architecture',
+    courseId: 'flutter-advanced',
     title: 'Architecture et Fonctionnement de Flutter',
     description: 'Comprenez l\'architecture haut niveau du framework Flutter',
     parentModuleId: 'module-0-fondamentaux',
@@ -97,6 +101,7 @@ export const MODULES_DATA = [
   // ==================== MODULE 1: INTRODUCTION ====================
   {
     id: 'module-1-1-dart',
+    courseId: 'flutter-advanced',
     title: 'Introduction à la programmation avec Dart',
     description: 'Découvrez les fondamentaux du langage Dart',
     parentModuleId: 'module-1-intro',
@@ -119,6 +124,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-2-flutter-init',
+    courseId: 'flutter-advanced',
     title: 'Initiation au développement mobile avec Flutter',
     description: 'Premiers pas avec Flutter et création d\'applications simples',
     parentModuleId: 'module-1-intro',
@@ -141,6 +147,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-3-composants',
+    courseId: 'flutter-advanced',
     title: 'Notions de base des composants Flutter',
     description: 'Maîtrisez les widgets StatelessWidget et StatefulWidget',
     parentModuleId: 'module-1-intro',
@@ -163,6 +170,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-4-interfaces',
+    courseId: 'flutter-advanced',
     title: 'Création des interfaces utilisateur',
     description: 'Composez des interfaces complexes avec les widgets Flutter',
     parentModuleId: 'module-1-intro',
@@ -185,6 +193,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-5-navigation',
+    courseId: 'flutter-advanced',
     title: 'Navigation entre les écrans',
     description: 'Gérez la navigation et les formulaires dans votre application',
     parentModuleId: 'module-1-intro',
@@ -207,6 +216,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-6-theme',
+    courseId: 'flutter-advanced',
     title: 'Gestion du thème et des ressources',
     description: 'Personnalisez l\'apparence de votre application',
     parentModuleId: 'module-1-intro',
@@ -229,6 +239,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-1-bonus-navigation',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Navigator 1.0 vs GoRouter vs Navigator 2.0',
     description: 'Comparez les différentes approches de navigation',
     parentModuleId: 'module-1-intro',
@@ -252,6 +263,7 @@ export const MODULES_DATA = [
   // ==================== MODULE 2: INTERMÉDIAIRE ====================
   {
     id: 'module-2-1-interfaces-riches',
+    courseId: 'flutter-advanced',
     title: 'Création d\'interfaces riches',
     description: 'Créez des interfaces utilisateur avancées et dynamiques',
     parentModuleId: 'module-2-intermediaire',
@@ -274,6 +286,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-2-animations',
+    courseId: 'flutter-advanced',
     title: 'Animations implicites et explicites',
     description: 'Maîtrisez les animations pour des interfaces fluides',
     parentModuleId: 'module-2-intermediaire',
@@ -296,6 +309,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-3-gestion-etat',
+    courseId: 'flutter-advanced',
     title: 'Gestion d\'état d\'une application Flutter',
     description: 'Provider, Riverpod, Bloc - Choisissez la bonne solution',
     parentModuleId: 'module-2-intermediaire',
@@ -318,6 +332,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-4-architecture',
+    courseId: 'flutter-advanced',
     title: 'Architecture d\'une application Flutter',
     description: 'MVVM, Clean Architecture et principes SOLID',
     parentModuleId: 'module-2-intermediaire',
@@ -340,6 +355,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-5-dart-avance',
+    courseId: 'flutter-advanced',
     title: 'Notions avancées de Dart',
     description: 'POO, gestion d\'erreurs et programmation asynchrone',
     parentModuleId: 'module-2-intermediaire',
@@ -362,6 +378,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-6-api-stockage',
+    courseId: 'flutter-advanced',
     title: 'Interaction avec APIs et Stockage des données',
     description: 'HTTP, Firebase et bases de données locales',
     parentModuleId: 'module-2-intermediaire',
@@ -384,6 +401,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-bonus-mason',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Templates réutilisables avec Mason & Bricks',
     description: 'Automatisez la génération de code',
     parentModuleId: 'module-2-intermediaire',
@@ -405,6 +423,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-bonus-isolates',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Optimiser avec les Isolates - Google Maps Lite',
     description: 'Tâches de fond et performance',
     parentModuleId: 'module-2-intermediaire',
@@ -426,6 +445,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-2-bonus-whatsapp',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Mini WhatsApp - Notifications temps réel',
     description: 'Chat instantané avec Firebase',
     parentModuleId: 'module-2-intermediaire',
@@ -449,6 +469,7 @@ export const MODULES_DATA = [
   // ==================== MODULE 3: AVANCÉ ====================
   {
     id: 'module-3-1-production',
+    courseId: 'flutter-advanced',
     title: 'Production de son application',
     description: 'Publication dans les stores et CI/CD',
     parentModuleId: 'module-3-avance',
@@ -471,6 +492,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-3-2-qualite-code',
+    courseId: 'flutter-advanced',
     title: 'Qualité de code et performance',
     description: 'Tests, analyse et optimisation',
     parentModuleId: 'module-3-avance',
@@ -493,6 +515,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-3-bonus-fvm',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Flutter Version Management (FVM)',
     description: 'Gérer plusieurs versions de Flutter',
     parentModuleId: 'module-3-avance',
@@ -513,6 +536,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-3-bonus-publication-auto',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Publication automatisée Play Store',
     description: 'CI/CD avec Google Play API',
     parentModuleId: 'module-3-avance',
@@ -533,6 +557,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-3-bonus-i18n',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Internationalisation (i18n)',
     description: 'Rendre son application multilingue',
     parentModuleId: 'module-3-avance',
@@ -553,6 +578,7 @@ export const MODULES_DATA = [
   },
   {
     id: 'module-3-bonus-monetisation',
+    courseId: 'flutter-advanced',
     title: 'BONUS: Monétisation d\'application',
     description: 'In-app purchases, ads et abonnements',
     parentModuleId: 'module-3-avance',
@@ -623,4 +649,31 @@ export const getModulesStats = () => {
     totalQuestions: MODULES_DATA.reduce((sum, m) => sum + m.questionCount, 0),
     totalTime: MODULES_DATA.reduce((sum, m) => sum + m.estimatedTime, 0)
   };
+};
+
+/**
+ * Obtenir les modules d'une formation spécifique
+ * @param {string} courseId - ID de la formation
+ * @returns {Array} Liste des modules de la formation
+ */
+export const getModulesByCourse = (courseId) => {
+  return MODULES_DATA.filter(m => m.courseId === courseId);
+};
+
+/**
+ * Obtenir les modules obligatoires d'une formation
+ * @param {string} courseId - ID de la formation
+ * @returns {Array} Liste des modules obligatoires
+ */
+export const getRequiredModulesByCourse = (courseId) => {
+  return MODULES_DATA.filter(m => m.courseId === courseId && !m.isBonus);
+};
+
+/**
+ * Obtenir les modules bonus d'une formation
+ * @param {string} courseId - ID de la formation
+ * @returns {Array} Liste des modules bonus
+ */
+export const getBonusModulesByCourse = (courseId) => {
+  return MODULES_DATA.filter(m => m.courseId === courseId && m.isBonus);
 };

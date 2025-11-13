@@ -16,7 +16,7 @@ export const useQuizStore = create(
       userProgress: {
         userId: null,
         lastSync: null,
-        modules: {}, // { moduleId: { status, attempts[], bestScore, lastAttemptDate, completedAt } }
+        courses: {}, // { courseId: { enrolledAt, modules: {}, stats: {} } }
         globalStats: {
           totalModulesCompleted: 0,
           totalQuizzesTaken: 0,
@@ -24,7 +24,9 @@ export const useQuizStore = create(
           totalTimeSpent: 0,
           currentStreak: 0,
           longestStreak: 0,
-          badges: []
+          badges: [],
+          totalCoursesEnrolled: 0,
+          totalCoursesCompleted: 0
         }
       },
 
@@ -131,17 +133,43 @@ export const useQuizStore = create(
       /**
        * Sauvegarder la tentative de quiz
        */
-      saveQuizAttempt: (moduleId, results) => {
+      saveQuizAttempt: (courseId, moduleId, results) => {
+        console.log('🔵 [quizStore] saveQuizAttempt appelé:', { courseId, moduleId, results });
         set(state => {
-          const moduleProgress = state.userProgress.modules[moduleId] || {
-            status: 'in_progress',
+          console.log('🔵 [quizStore] État actuel userProgress:', state.userProgress);
+          // S'assurer que le cours existe
+          if (!state.userProgress.courses[courseId]) {
+            state.userProgress.courses[courseId] = {
+              courseId,
+              enrolledAt: new Date().toISOString(),
+              completedAt: null,
+              lastActivityAt: new Date().toISOString(),
+              modules: {},
+              stats: {
+                totalModulesCompleted: 0,
+                totalQuizzesTaken: 0,
+                averageScore: 0,
+                totalTimeSpent: 0,
+                progress: 0
+              }
+            };
+          }
+
+          const courseProgress = state.userProgress.courses[courseId];
+
+          const moduleProgress = courseProgress.modules[moduleId] || {
+            moduleId,
+            status: 'unlocked',
             attempts: [],
             bestScore: 0,
             lastAttemptDate: null,
-            completedAt: null
+            completedAt: null,
+            firstAttemptDate: null,
+            totalTimeSpent: 0
           };
 
           const newAttempt = {
+            attemptId: `${moduleId}-${Date.now()}`,
             attemptNumber: moduleProgress.attempts.length + 1,
             date: new Date().toISOString(),
             ...results,
@@ -154,48 +182,75 @@ export const useQuizStore = create(
             results.score
           );
           moduleProgress.lastAttemptDate = newAttempt.date;
+          moduleProgress.totalTimeSpent += results.timeSpent;
+
+          if (!moduleProgress.firstAttemptDate) {
+            moduleProgress.firstAttemptDate = newAttempt.date;
+          }
 
           // Mettre à jour le statut
           if (results.score >= 70) {
-            moduleProgress.status = 'completed';
-            moduleProgress.completedAt = newAttempt.date;
-          } else if (results.score < 70 && moduleProgress.status !== 'completed') {
+            if (moduleProgress.status !== 'completed' && moduleProgress.status !== 'perfect') {
+              moduleProgress.completedAt = newAttempt.date;
+            }
+            moduleProgress.status = results.score === 100 ? 'perfect' : 'completed';
+          } else if (moduleProgress.status === 'unlocked') {
             moduleProgress.status = 'in_progress';
           }
 
-          if (results.score === 100) {
-            moduleProgress.status = 'perfect';
-          }
+          // Mettre à jour les stats du cours
+          const courseModules = Object.values(courseProgress.modules);
+          const courseScores = courseModules.flatMap(m => m.attempts.map(a => a.score));
+          const courseCompletedModules = courseModules.filter(
+            m => m.status === 'completed' || m.status === 'perfect'
+          ).length;
+
+          courseProgress.modules[moduleId] = moduleProgress;
+          courseProgress.lastActivityAt = new Date().toISOString();
+          courseProgress.stats = {
+            totalModulesCompleted: courseCompletedModules,
+            totalQuizzesTaken: courseScores.length,
+            averageScore: courseScores.length > 0
+              ? Math.round(courseScores.reduce((sum, s) => sum + s, 0) / courseScores.length)
+              : 0,
+            totalTimeSpent: courseModules.reduce((sum, m) => sum + m.totalTimeSpent, 0),
+            progress: 0
+          };
 
           // Mettre à jour stats globales
-          const newTotalQuizzesTaken = state.userProgress.globalStats.totalQuizzesTaken + 1;
-          const allScores = Object.values(state.userProgress.modules).flatMap(m =>
-            m.attempts.map(a => a.score)
-          ).concat(results.score);
-          const newAverageScore = Math.round(
-            allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+          const allCourses = Object.values(state.userProgress.courses);
+          const allScores = allCourses.flatMap(c =>
+            Object.values(c.modules).flatMap(m => m.attempts.map(a => a.score))
           );
 
-          const completedModules = Object.values(state.userProgress.modules).filter(
-            m => m.status === 'completed' || m.status === 'perfect'
-          ).length + (results.score >= 70 && moduleProgress.status === 'in_progress' ? 1 : 0);
+          const completedModules = allCourses.reduce(
+            (sum, c) => sum + Object.values(c.modules).filter(
+              m => m.status === 'completed' || m.status === 'perfect'
+            ).length,
+            0
+          );
 
-          return {
+          const newState = {
             userProgress: {
               ...state.userProgress,
-              modules: {
-                ...state.userProgress.modules,
-                [moduleId]: moduleProgress
+              courses: {
+                ...state.userProgress.courses,
+                [courseId]: courseProgress
               },
               globalStats: {
                 ...state.userProgress.globalStats,
                 totalModulesCompleted: completedModules,
-                totalQuizzesTaken: newTotalQuizzesTaken,
-                averageScore: newAverageScore,
-                totalTimeSpent: state.userProgress.globalStats.totalTimeSpent + results.timeSpent
+                totalQuizzesTaken: allScores.length,
+                averageScore: allScores.length > 0
+                  ? Math.round(allScores.reduce((sum, s) => sum + s, 0) / allScores.length)
+                  : 0,
+                totalTimeSpent: allCourses.reduce((sum, c) => sum + c.stats.totalTimeSpent, 0),
+                totalCoursesEnrolled: Object.keys(state.userProgress.courses).length
               }
             }
           };
+          console.log('🟢 [quizStore] Nouvel état userProgress:', newState.userProgress);
+          return newState;
         });
 
         // Réinitialiser la session
@@ -211,7 +266,7 @@ export const useQuizStore = create(
       /**
        * Vérifier si un module est accessible
        */
-      canAccessModule: (moduleId) => {
+      canAccessModule: (courseId, moduleId) => {
         const { userProgress } = get();
         const module = getModuleById(moduleId);
 
@@ -219,7 +274,10 @@ export const useQuizStore = create(
         if (module.isFirst) return true; // Premier module toujours accessible
         if (!module.previousModuleId) return true;
 
-        const prevModuleProgress = userProgress.modules[module.previousModuleId];
+        const courseProgress = userProgress.courses?.[courseId];
+        if (!courseProgress) return false;
+
+        const prevModuleProgress = courseProgress.modules?.[module.previousModuleId];
         if (!prevModuleProgress) return false;
 
         return prevModuleProgress.bestScore >= 70;
@@ -228,13 +286,14 @@ export const useQuizStore = create(
       /**
        * Obtenir le statut d'un module
        */
-      getModuleStatus: (moduleId) => {
+      getModuleStatus: (courseId, moduleId) => {
         const { userProgress } = get();
-        const moduleProgress = userProgress.modules[moduleId];
+        const courseProgress = userProgress.courses?.[courseId];
+        const moduleProgress = courseProgress?.modules?.[moduleId];
 
         if (!moduleProgress) {
           // Pas encore tenté - vérifier si accessible
-          return get().canAccessModule(moduleId) ? 'unlocked' : 'locked';
+          return get().canAccessModule(courseId, moduleId) ? 'unlocked' : 'locked';
         }
 
         return moduleProgress.status;
@@ -243,9 +302,10 @@ export const useQuizStore = create(
       /**
        * Obtenir les statistiques d'un module
        */
-      getModuleStats: (moduleId) => {
+      getModuleStats: (courseId, moduleId) => {
         const { userProgress } = get();
-        const moduleProgress = userProgress.modules[moduleId];
+        const courseProgress = userProgress.courses?.[courseId];
+        const moduleProgress = courseProgress?.modules?.[moduleId];
 
         if (!moduleProgress || !moduleProgress.attempts.length) {
           return null;
@@ -271,7 +331,7 @@ export const useQuizStore = create(
           userProgress: {
             userId: `local-user-${crypto.randomUUID()}`,
             lastSync: null,
-            modules: {},
+            courses: {},
             globalStats: {
               totalModulesCompleted: 0,
               totalQuizzesTaken: 0,
@@ -279,7 +339,9 @@ export const useQuizStore = create(
               totalTimeSpent: 0,
               currentStreak: 0,
               longestStreak: 0,
-              badges: []
+              badges: [],
+              totalCoursesEnrolled: 0,
+              totalCoursesCompleted: 0
             }
           }
         });
@@ -291,12 +353,18 @@ export const useQuizStore = create(
       getGlobalProgress: () => {
         const { userProgress } = get();
         const requiredModules = MODULES_DATA.filter(m => !m.isBonus);
-        const completedModules = requiredModules.filter(m => {
-          const progress = userProgress.modules[m.id];
-          return progress && (progress.status === 'completed' || progress.status === 'perfect');
+
+        let completedCount = 0;
+        Object.values(userProgress.courses || {}).forEach(course => {
+          requiredModules.forEach(m => {
+            const progress = course.modules?.[m.id];
+            if (progress && (progress.status === 'completed' || progress.status === 'perfect')) {
+              completedCount++;
+            }
+          });
         });
 
-        return Math.round((completedModules.length / requiredModules.length) * 100);
+        return Math.round((completedCount / requiredModules.length) * 100);
       }
     }),
     {

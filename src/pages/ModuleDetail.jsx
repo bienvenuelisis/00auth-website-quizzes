@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useParams, useNavigate, Link as RouterLink, Navigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -26,33 +26,45 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { getModuleById } from '../data/modules';
+import { getCourseById } from '../data/courses';
 import { useQuizStore } from '../stores/quizStore';
 import { getOrGenerateQuiz } from '../services/geminiQuiz';
 import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
 import RegenerateQuizButton from '../components/Quiz/RegenerateQuizButton';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * ModuleDetail - Page de détails d'un module
  * Affiche les informations du module et permet de démarrer le quiz
  */
 export default function ModuleDetail() {
-  const { moduleId } = useParams();
+  const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
   const { canAccessModule, getModuleStats, startQuizSession } = useQuizStore();
+  const { isAuthenticated, profile } = useAuth();
   const analytics = useAnalytics();
+
+  // Vérifier si l'utilisateur peut accéder aux formations
+  const canAccessCourses = isAuthenticated && profile?.accountIsValid && profile?.isActive;
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Rediriger vers la page d'accueil si l'utilisateur n'a pas accès
+  if (!canAccessCourses) {
+    return <Navigate to="/" replace />;
+  }
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
   const module = getModuleById(moduleId);
-  const canAccess = canAccessModule(moduleId);
-  const stats = getModuleStats(moduleId);
+  const course = getCourseById(courseId);
+  const canAccess = canAccessModule(courseId, moduleId);
+  const stats = getModuleStats(courseId, moduleId);
 
   // Tracker le temps passé sur la page du module
   usePageTimeTracking('module_detail', moduleId);
@@ -119,7 +131,7 @@ export default function ModuleDetail() {
       startQuizSession(moduleId, quiz.questions);
 
       // Naviguer vers la page de quiz
-      navigate(`/module/${moduleId}/quiz`);
+      navigate(`/course/${courseId}/module/${moduleId}/quiz`);
     } catch (err) {
       console.error('Erreur démarrage quiz:', err);
 
@@ -169,8 +181,19 @@ export default function ModuleDetail() {
           color="inherit"
           sx={{ display: 'flex', alignItems: 'center' }}
         >
-          Tableau de bord
+          Formations
         </Link>
+        {course && (
+          <Link
+            component={RouterLink}
+            to={`/course/${courseId}`}
+            underline="hover"
+            color="inherit"
+            sx={{ display: 'flex', alignItems: 'center' }}
+          >
+            {course.shortTitle}
+          </Link>
+        )}
         <Typography color="text.primary">{module.title}</Typography>
       </Breadcrumbs>
 
@@ -314,9 +337,9 @@ export default function ModuleDetail() {
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
+            onClick={() => navigate(`/course/${courseId}`)}
           >
-            Retour
+            Retour à la formation
           </Button>
           <Button
             variant="contained"

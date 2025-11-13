@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link as RouterLink, Navigate } from 'react-router-dom';
 import {
   Container,
   Box,
@@ -26,22 +26,34 @@ import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { getModuleById, getNextModule } from '../data/modules';
+import { getCourseById } from '../data/courses';
 import { useQuizStore } from '../stores/quizStore';
 import { useAnalytics, usePageTimeTracking } from '../hooks/useAnalytics';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Results - Page d'affichage des résultats du quiz
  * Montre le score, les statistiques et les options de navigation
  */
 export default function Results() {
-  const { moduleId } = useParams();
+  const { courseId, moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, profile } = useAuth();
+
+  // Vérifier si l'utilisateur peut accéder aux formations
+  const canAccessCourses = isAuthenticated && profile?.accountIsValid && profile?.isActive;
+
+  // Rediriger vers la page d'accueil si l'utilisateur n'a pas accès
+  if (!canAccessCourses) {
+    return <Navigate to="/" replace />;
+  }
   const { getModuleStats } = useQuizStore();
   const analytics = useAnalytics();
 
   const module = getModuleById(moduleId);
-  const stats = getModuleStats(moduleId);
+  const course = getCourseById(courseId);
+  const stats = getModuleStats(courseId, moduleId);
   const nextModule = getNextModule(moduleId);
 
   // Scroll to top when component mounts
@@ -57,7 +69,7 @@ export default function Results() {
 
   useEffect(() => {
     if (!results) {
-      navigate(`/module/${moduleId}`);
+      navigate(`/course/${courseId}/module/${moduleId}`);
       return;
     }
 
@@ -357,9 +369,9 @@ export default function Results() {
             variant="outlined"
             startIcon={<HomeIcon />}
             component={RouterLink}
-            to="/"
+            to={`/course/${courseId}`}
           >
-            Tableau de bord
+            Retour à la formation
           </Button>
 
           <Button
@@ -371,7 +383,7 @@ export default function Results() {
                 results.score,
                 stats?.attemptsCount || 1
               );
-              navigate(`/module/${moduleId}`);
+              navigate(`/course/${courseId}/module/${moduleId}`);
             }}
           >
             Recommencer
@@ -383,7 +395,7 @@ export default function Results() {
               endIcon={<NextIcon />}
               onClick={() => {
                 analytics.trackNextModuleClick(moduleId, nextModule.id, results.score);
-                navigate(`/module/${nextModule.id}`);
+                navigate(`/course/${courseId}/module/${nextModule.id}`);
               }}
             >
               Module suivant
