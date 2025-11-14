@@ -37,13 +37,35 @@ export async function initializeProgress(userId) {
 export async function getProgress(userId) {
   const progress = await getDocument(PROGRESS_COLLECTION, userId);
 
+  // Helper pour convertir de manière sécurisée Timestamp ou Date vers Date
+  const safeConvertToDate = (value) => {
+    if (!value) return null;
+
+    try {
+      // Si c'est un Timestamp Firestore
+      if (value && typeof value.toDate === 'function') {
+        return value.toDate();
+      }
+      // Si c'est déjà une Date ou une string
+      const date = new Date(value);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value detected:', value);
+        return null;
+      }
+      return date;
+    } catch (error) {
+      console.warn('Error converting to date:', value, error);
+      return null;
+    }
+  };
+
   // Convertir les Timestamps en Date
   if (progress.lastSync) {
-    progress.lastSync = progress.lastSync.toDate();
+    progress.lastSync = safeConvertToDate(progress.lastSync);
   }
 
   if (progress.globalStats?.lastActivityDate) {
-    progress.globalStats.lastActivityDate = progress.globalStats.lastActivityDate.toDate();
+    progress.globalStats.lastActivityDate = safeConvertToDate(progress.globalStats.lastActivityDate);
   }
 
   // Convertir les dates dans les formations
@@ -52,13 +74,13 @@ export async function getProgress(userId) {
       const course = progress.courses[courseId];
 
       if (course.enrolledAt) {
-        course.enrolledAt = course.enrolledAt.toDate();
+        course.enrolledAt = safeConvertToDate(course.enrolledAt);
       }
       if (course.completedAt) {
-        course.completedAt = course.completedAt.toDate();
+        course.completedAt = safeConvertToDate(course.completedAt);
       }
       if (course.lastActivityAt) {
-        course.lastActivityAt = course.lastActivityAt.toDate();
+        course.lastActivityAt = safeConvertToDate(course.lastActivityAt);
       }
 
       // Convertir les dates dans les modules
@@ -67,20 +89,20 @@ export async function getProgress(userId) {
           const module = course.modules[moduleId];
 
           if (module.lastAttemptDate) {
-            module.lastAttemptDate = module.lastAttemptDate.toDate();
+            module.lastAttemptDate = safeConvertToDate(module.lastAttemptDate);
           }
           if (module.completedAt) {
-            module.completedAt = module.completedAt.toDate();
+            module.completedAt = safeConvertToDate(module.completedAt);
           }
           if (module.firstAttemptDate) {
-            module.firstAttemptDate = module.firstAttemptDate.toDate();
+            module.firstAttemptDate = safeConvertToDate(module.firstAttemptDate);
           }
 
           // Convertir les dates dans les tentatives
-          if (module.attempts) {
+          if (module.attempts && Array.isArray(module.attempts)) {
             module.attempts.forEach((attempt) => {
               if (attempt.date) {
-                attempt.date = new Date(attempt.date);
+                attempt.date = safeConvertToDate(attempt.date);
               }
             });
           }
@@ -304,10 +326,29 @@ function prepareProgressForFirestore(progress) {
     lastSync: Timestamp.now()
   };
 
+  // Helper pour convertir une date de manière sécurisée
+  const safeConvertToTimestamp = (dateValue) => {
+    if (!dateValue) return null;
+
+    try {
+      const date = new Date(dateValue);
+      // Vérifier que la date est valide
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date detected:', dateValue);
+        return null;
+      }
+      return Timestamp.fromDate(date);
+    } catch (error) {
+      console.warn('Error converting date to timestamp:', dateValue, error);
+      return null;
+    }
+  };
+
   if (data.globalStats?.lastActivityDate) {
-    data.globalStats.lastActivityDate = Timestamp.fromDate(
-      new Date(data.globalStats.lastActivityDate)
-    );
+    const timestamp = safeConvertToTimestamp(data.globalStats.lastActivityDate);
+    if (timestamp) {
+      data.globalStats.lastActivityDate = timestamp;
+    }
   }
 
   // Convertir les dates des formations
@@ -316,13 +357,16 @@ function prepareProgressForFirestore(progress) {
       const course = data.courses[courseId];
 
       if (course.enrolledAt) {
-        course.enrolledAt = Timestamp.fromDate(new Date(course.enrolledAt));
+        const timestamp = safeConvertToTimestamp(course.enrolledAt);
+        if (timestamp) course.enrolledAt = timestamp;
       }
       if (course.completedAt) {
-        course.completedAt = Timestamp.fromDate(new Date(course.completedAt));
+        const timestamp = safeConvertToTimestamp(course.completedAt);
+        if (timestamp) course.completedAt = timestamp;
       }
       if (course.lastActivityAt) {
-        course.lastActivityAt = Timestamp.fromDate(new Date(course.lastActivityAt));
+        const timestamp = safeConvertToTimestamp(course.lastActivityAt);
+        if (timestamp) course.lastActivityAt = timestamp;
       }
 
       // Convertir les dates des modules
@@ -331,13 +375,24 @@ function prepareProgressForFirestore(progress) {
           const module = course.modules[moduleId];
 
           if (module.lastAttemptDate) {
-            module.lastAttemptDate = Timestamp.fromDate(new Date(module.lastAttemptDate));
+            const timestamp = safeConvertToTimestamp(module.lastAttemptDate);
+            if (timestamp) module.lastAttemptDate = timestamp;
           }
           if (module.completedAt) {
-            module.completedAt = Timestamp.fromDate(new Date(module.completedAt));
+            const timestamp = safeConvertToTimestamp(module.completedAt);
+            if (timestamp) module.completedAt = timestamp;
           }
           if (module.firstAttemptDate) {
-            module.firstAttemptDate = Timestamp.fromDate(new Date(module.firstAttemptDate));
+            const timestamp = safeConvertToTimestamp(module.firstAttemptDate);
+            if (timestamp) module.firstAttemptDate = timestamp;
+          }
+
+          // IMPORTANT: Convertir les dates dans les tentatives (attempts)
+          if (module.attempts && Array.isArray(module.attempts)) {
+            module.attempts = module.attempts.map((attempt) => ({
+              ...attempt,
+              date: attempt.date ? safeConvertToTimestamp(attempt.date) : Timestamp.now()
+            }));
           }
         });
       }
