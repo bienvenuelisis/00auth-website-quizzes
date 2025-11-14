@@ -423,7 +423,7 @@ export default function Results() {
                         elevation={0}
                         sx={{
                           p: 2,
-                          bgcolor: 'grey.100',
+                          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
                           fontFamily: 'monospace',
                           fontSize: '0.9rem',
                           mb: 2,
@@ -436,7 +436,19 @@ export default function Results() {
                     )}
 
                     {/* Réponse de l'utilisateur */}
-                    <Box sx={{ mb: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
+                    <Box
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(211, 47, 47, 0.2)'
+                          : 'error.light',
+                        borderRadius: 1,
+                        border: (theme) => theme.palette.mode === 'dark'
+                          ? '1px solid rgba(211, 47, 47, 0.5)'
+                          : 'none'
+                      }}
+                    >
                       <Typography variant="subtitle2" fontWeight="600" gutterBottom>
                         ❌ Votre réponse :
                       </Typography>
@@ -446,7 +458,19 @@ export default function Results() {
                     </Box>
 
                     {/* Bonne réponse */}
-                    <Box sx={{ mb: 2, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                    <Box
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: (theme) => theme.palette.mode === 'dark'
+                          ? 'rgba(46, 125, 50, 0.2)'
+                          : 'success.light',
+                        borderRadius: 1,
+                        border: (theme) => theme.palette.mode === 'dark'
+                          ? '1px solid rgba(46, 125, 50, 0.5)'
+                          : 'none'
+                      }}
+                    >
                       <Typography variant="subtitle2" fontWeight="600" gutterBottom>
                         ✅ Bonne réponse :
                       </Typography>
@@ -457,7 +481,7 @@ export default function Results() {
 
                     {/* Explication */}
                     <Box sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2" fontWeight="600" gutterBottom color="primary">
+                      <Typography variant="subtitle2" fontWeight="600" gutterBottom color="text.secondary">
                         💡 Explication
                       </Typography>
                       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -469,11 +493,11 @@ export default function Results() {
                     {question.resources && question.resources.length > 0 && (
                       <Box>
                         <Typography variant="subtitle2" fontWeight="600" gutterBottom color="secondary">
-                          📖 Ressources pour approfondir
+                          Ressources pour approfondir
                         </Typography>
                         <List dense>
                           {question.resources.map((resource, idx) => (
-                            <ListItem key={idx} disablePadding>
+                            <ListItem key={idx}>
                               <ListItemIcon sx={{ minWidth: 36 }}>
                                 {getResourceIcon(resource.type)}
                               </ListItemIcon>
@@ -484,13 +508,14 @@ export default function Results() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     underline="hover"
+                                    color='text.secondary'
                                     sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                                   >
                                     {resource.title}
                                     <LinkIcon fontSize="inherit" />
                                   </Link>
                                 }
-                                secondary={resource.type}
+                                // secondary={resource.type}
                               />
                             </ListItem>
                           ))}
