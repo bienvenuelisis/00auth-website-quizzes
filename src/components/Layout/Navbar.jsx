@@ -12,7 +12,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
 } from "@mui/material";
 import {
   Brightness4 as DarkModeIcon,
@@ -23,7 +23,8 @@ import {
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
   AdminPanelSettings as AdminIcon,
-  School as ProgressIcon
+  School as ProgressIcon,
+  Assignment as AssignmentIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -202,11 +203,44 @@ export default function Navbar() {
                   <ListItemText>Mon profil</ListItemText>
                 </MenuItem>
 
+                <Divider />
+
+                {/* Menu Travaux Pratiques */}
+                {isAdmin || canManageUsers ? (
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      navigate("/admin/practical-works");
+                    }}
+                  >
+                    <ListItemIcon>
+                      <AssignmentIcon fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    <ListItemText>Travaux Pratiques</ListItemText>
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      navigate("/course/flutter-advanced/practical-works");
+                    }}
+                  >
+                    <ListItemIcon>
+                      <AssignmentIcon fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    <ListItemText>Mes Travaux Pratiques</ListItemText>
+                  </MenuItem>
+                )}
+
                 {/* Menu Administration */}
                 {(isAdmin || canManageUsers) && (
                   <>
-                    <Divider />
-                    <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }}>
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        navigate("/admin");
+                      }}
+                    >
                       <ListItemIcon>
                         <AdminIcon fontSize="small" color="error" />
                       </ListItemIcon>
@@ -217,7 +251,12 @@ export default function Navbar() {
 
                 {/* Menu Progressions */}
                 {canViewAnalytics && (
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/admin/progress'); }}>
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      navigate("/admin/progress");
+                    }}
+                  >
                     <ListItemIcon>
                       <ProgressIcon fontSize="small" color="primary" />
                     </ListItemIcon>

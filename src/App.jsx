@@ -16,6 +16,11 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminModules from './pages/AdminModules';
 import StudentProgressTracker from './pages/StudentProgressTracker';
 import AdminLeaderboard from './pages/AdminLeaderboard';
+import PracticalWorksList from './pages/PracticalWorksList';
+import PracticalWorkDetail from './pages/PracticalWorkDetail';
+import PracticalWorkSubmission from './pages/PracticalWorkSubmission';
+import PracticalWorkReview from './pages/PracticalWorkReview';
+import AdminPracticalWorks from './pages/AdminPracticalWorks';
 import { usePageTracking } from './hooks/useAnalytics';
 import analyticsService from './services/analyticsService';
 import './scripts/migrateModules'; // Charger les helpers de migration
@@ -107,9 +112,23 @@ function AppContent() {
           <Route path="/admin/modules" element={<AdminModules />} />
           <Route path="/admin/progress" element={<StudentProgressTracker />} />
           <Route path="/admin/leaderboard" element={<AdminLeaderboard />} />
+          <Route path="/admin/practical-works" element={<AdminPracticalWorks />} />
 
           {/* Dashboard d'une formation - Liste des modules */}
           <Route path="/course/:courseId" element={<CourseDashboard />} />
+
+          {/* Travaux Pratiques - Liste */}
+          <Route path="/course/:courseId/practical-works" element={<PracticalWorksList />} />
+
+          {/* Travaux Pratiques - Détail */}
+          <Route path="/course/:courseId/practical-work/:practicalWorkId" element={<PracticalWorkDetail />} />
+
+          {/* Travaux Pratiques - Soumission */}
+          <Route path="/course/:courseId/practical-work/:practicalWorkId/submit" element={<PracticalWorkSubmission />} />
+
+          {/* Travaux Pratiques - Évaluation (Admin/Instructeur) */}
+          <Route path="/admin/practical-work/:practicalWorkId/review/:userId" element={<PracticalWorkReview />} />
+          <Route path="/admin/practical-work/:practicalWorkId/review/:userId/:attemptNumber" element={<PracticalWorkReview />} />
 
           {/* Détails d'un module */}
           <Route path="/course/:courseId/module/:moduleId" element={<ModuleDetail />} />

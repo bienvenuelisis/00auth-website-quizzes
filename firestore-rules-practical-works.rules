@@ -1,0 +1,228 @@
+/**
+ * Règles de sécurité Firestore pour les Travaux Pratiques
+ * Collections: practicalWorkProgress, practicalWorkSubmissions
+ *
+ * À intégrer dans votre fichier firestore.rules principal
+ */
+
+// ==================== Collection: practicalWorkProgress ====================
+// Stocke la progression des étudiants sur les travaux pratiques
+match /practicalWorkProgress/{progressId} {
+  // Les étudiants peuvent lire leur propre progression
+  allow read: if request.auth != null
+    && (
+      // L'étudiant peut voir sa propre progression
+      resource.data.userId == request.auth.uid
+      // Les admins et instructeurs peuvent voir toutes les progressions
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor'
+    );
+
+  // Les étudiants peuvent créer leur propre progression
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid
+    && request.resource.data.keys().hasAll(['userId', 'practicalWorkId', 'courseId', 'status', 'attempts']);
+
+  // Les étudiants peuvent mettre à jour leur propre progression (soumission)
+  // Les instructeurs peuvent mettre à jour pour évaluation
+  allow update: if request.auth != null
+    && (
+      // Étudiant met à jour sa propre progression (soumission)
+      (resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId  // Ne peut pas changer userId
+        && request.resource.data.practicalWorkId == resource.data.practicalWorkId  // Ne peut pas changer practicalWorkId
+      )
+      // Instructeur ou admin peut évaluer
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor'
+    );
+
+  // Seuls les admins peuvent supprimer (pour nettoyage)
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+}
+
+// ==================== Collection: practicalWorkSubmissions ====================
+// Alternative: Stockage séparé des soumissions pour meilleure organisation
+match /practicalWorkSubmissions/{submissionId} {
+  // Lecture: étudiant voit ses soumissions, instructeurs voient tout
+  allow read: if request.auth != null
+    && (
+      resource.data.userId == request.auth.uid
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor'
+    );
+
+  // Création: seuls les étudiants pour leurs propres soumissions
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid
+    && request.resource.data.keys().hasAll([
+      'userId',
+      'practicalWorkId',
+      'courseId',
+      'attemptNumber',
+      'submittedAt',
+      'status',
+      'deliverables'
+    ]);
+
+  // Mise à jour: étudiant pour resoumission, instructeur pour évaluation
+  allow update: if request.auth != null
+    && (
+      // Étudiant peut revoir sa soumission si pas encore évaluée
+      (resource.data.userId == request.auth.uid
+        && resource.data.status == 'submitted'
+        && !exists(/databases/$(database)/documents/practicalWorkSubmissions/$(submissionId)/evaluation)
+      )
+      // Instructeur/admin peut évaluer
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor'
+    );
+
+  // Suppression: uniquement admins
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+}
+
+// ==================== Collection: practicalWorkFiles ====================
+// Métadonnées des fichiers uploadés (les fichiers eux-mêmes sont dans Storage)
+match /practicalWorkFiles/{fileId} {
+  // Lecture: propriétaire et instructeurs
+  allow read: if request.auth != null
+    && (
+      resource.data.userId == request.auth.uid
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor'
+    );
+
+  // Création: uniquement le propriétaire
+  allow create: if request.auth != null
+    && request.resource.data.userId == request.auth.uid;
+
+  // Mise à jour: propriétaire uniquement
+  allow update: if request.auth != null
+    && resource.data.userId == request.auth.uid
+    && request.resource.data.userId == resource.data.userId;
+
+  // Suppression: propriétaire ou admin
+  allow delete: if request.auth != null
+    && (
+      resource.data.userId == request.auth.uid
+      || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+    );
+}
+
+/**
+ * INSTRUCTIONS D'INTÉGRATION
+ *
+ * 1. Ouvrez votre fichier firestore.rules principal
+ *
+ * 2. Ajoutez ces règles dans la section appropriée:
+ *
+ *    rules_version = '2';
+ *    service cloud.firestore {
+ *      match /databases/{database}/documents {
+ *
+ *        // ... autres règles existantes (users, progress, moduleActivation, etc.)
+ *
+ *        // ===== TRAVAUX PRATIQUES =====
+ *
+ *        // Progression des travaux pratiques
+ *        match /practicalWorkProgress/{progressId} {
+ *          allow read: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+ *
+ *          allow create: if request.auth != null
+ *            && request.resource.data.userId == request.auth.uid;
+ *
+ *          allow update: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+ *
+ *          allow delete: if request.auth != null
+ *            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+ *        }
+ *
+ *        // Soumissions des travaux pratiques
+ *        match /practicalWorkSubmissions/{submissionId} {
+ *          allow read: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+ *
+ *          allow create: if request.auth != null
+ *            && request.resource.data.userId == request.auth.uid;
+ *
+ *          allow update: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+ *
+ *          allow delete: if request.auth != null
+ *            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+ *        }
+ *
+ *        // Fichiers des travaux pratiques
+ *        match /practicalWorkFiles/{fileId} {
+ *          allow read: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+ *
+ *          allow create: if request.auth != null
+ *            && request.resource.data.userId == request.auth.uid;
+ *
+ *          allow update: if request.auth != null
+ *            && resource.data.userId == request.auth.uid;
+ *
+ *          allow delete: if request.auth != null
+ *            && (resource.data.userId == request.auth.uid
+ *                || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true);
+ *        }
+ *
+ *      }
+ *    }
+ *
+ * 3. Déployez les règles:
+ *    firebase deploy --only firestore:rules
+ *
+ * 4. Testez les règles dans la console Firebase (onglet "Rules playground")
+ */
+
+/**
+ * RÈGLES POUR FIREBASE STORAGE
+ * À ajouter dans storage.rules
+ */
+
+/*
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Dossier des travaux pratiques
+    match /practical-works/{userId}/{practicalWorkId}/{fileName} {
+      // Lecture: propriétaire et instructeurs/admins
+      allow read: if request.auth != null
+        && (request.auth.uid == userId
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'instructor');
+
+      // Écriture: uniquement le propriétaire
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        // Limite de taille: 10MB
+        && request.resource.size < 10 * 1024 * 1024
+        // Types de fichiers autorisés
+        && request.resource.contentType.matches('application/pdf|application/zip|application/x-zip-compressed|image/.*|video/.*');
+
+      // Suppression: propriétaire ou admin
+      allow delete: if request.auth != null
+        && (request.auth.uid == userId
+            || firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true);
+    }
+  }
+}
+*/

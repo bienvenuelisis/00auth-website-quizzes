@@ -133,7 +133,7 @@ export default function QuizDashboard() {
           Mes Formations
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Développez vos compétences en développement mobile
+          Développez vos compétences dans le numérique à votre rythme
         </Typography>
       </Box>
 

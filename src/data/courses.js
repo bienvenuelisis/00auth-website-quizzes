@@ -14,7 +14,7 @@ export const COURSES_DATA = [
     language: 'fr',
 
     // Informations visuelles
-    thumbnail: '/images/courses/flutter-advanced.jpg', // À ajouter
+    thumbnail: '/images/courses/flutter-advanced.png', // À ajouter
     color: '#02569B', // Couleur principale Flutter
     icon: '📱',
 

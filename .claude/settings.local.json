@@ -15,7 +15,8 @@
       "Bash(dir /s /b firestore.rules 2)",
       "Bash(npm run build:*)",
       "Bash(dir:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

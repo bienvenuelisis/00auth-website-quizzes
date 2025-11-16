@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
+  CardMedia,
   Typography,
   Chip,
   Box,
@@ -57,71 +58,148 @@ export default function CourseCard({ course, progress = 0, stats = null, isLocke
         }}
         onClick={handleNavigate}
       >
-        {/* En-tête avec gradient */}
-        <Box
-          sx={{
-            height: 180,
-            background: `linear-gradient(135deg, ${course.color}22 0%, ${course.color}88 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          {/* Icône de la formation */}
-          <Typography sx={{ fontSize: 80, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
-            {course.icon}
-          </Typography>
-
-          {/* Badge de statut */}
-          {isCompleted && !isLocked && (
+        {/* En-tête avec image ou gradient + icône */}
+        {course.thumbnail ? (
+          <Box sx={{ position: 'relative' }}>
+            <CardMedia
+              component="img"
+              height="300"
+              image={course.thumbnail}
+              alt={course.shortTitle}
+              sx={{
+                objectFit: 'cover',
+                filter: isLocked ? 'grayscale(0.5)' : 'none'
+              }}
+            />
+            {/* Overlay gradient pour les badges */}
             <Box
               sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'success.main',
-                color: 'white',
-                borderRadius: 2,
-                px: 1.5,
-                py: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%)`,
+                pointerEvents: 'none'
               }}
-            >
-              <CheckIcon fontSize="small" />
-              <Typography variant="caption" fontWeight="600">
-                Complété
-              </Typography>
-            </Box>
-          )}
+            />
 
-          {/* Badge verrouillé */}
-          {isLocked && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'rgba(0, 0, 0, 0.6)',
-                color: 'white',
-                borderRadius: 2,
-                px: 1.5,
-                py: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5
-              }}
-            >
-              <LockIcon fontSize="small" />
-              <Typography variant="caption" fontWeight="600">
-                Verrouillé
-              </Typography>
-            </Box>
-          )}
-        </Box>
+            {/* Badge de statut */}
+            {isCompleted && !isLocked && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'success.main',
+                  color: 'white',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  boxShadow: 2
+                }}
+              >
+                <CheckIcon fontSize="small" />
+                <Typography variant="caption" fontWeight="600">
+                  Complété
+                </Typography>
+              </Box>
+            )}
+
+            {/* Badge verrouillé */}
+            {isLocked && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'rgba(0, 0, 0, 0.8)',
+                  color: 'white',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  boxShadow: 2
+                }}
+              >
+                <LockIcon fontSize="small" />
+                <Typography variant="caption" fontWeight="600">
+                  Verrouillé
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              height: 180,
+              background: `linear-gradient(135deg, ${course.color}22 0%, ${course.color}88 100%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Icône de la formation */}
+            <Typography sx={{ fontSize: 80, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
+              {course.icon}
+            </Typography>
+
+            {/* Badge de statut */}
+            {isCompleted && !isLocked && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'success.main',
+                  color: 'white',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5
+                }}
+              >
+                <CheckIcon fontSize="small" />
+                <Typography variant="caption" fontWeight="600">
+                  Complété
+                </Typography>
+              </Box>
+            )}
+
+            {/* Badge verrouillé */}
+            {isLocked && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'rgba(0, 0, 0, 0.6)',
+                  color: 'white',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5
+                }}
+              >
+                <LockIcon fontSize="small" />
+                <Typography variant="caption" fontWeight="600">
+                  Verrouillé
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
 
         <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Titre et description */}
