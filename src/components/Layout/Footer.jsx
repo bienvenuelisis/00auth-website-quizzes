@@ -106,7 +106,7 @@ export default function Footer() {
           align="center"
           sx={{ display: 'block', mt: 1 }}
         >
-          Tous droits réservés. Version 0.1.0
+          Tous droits réservés. Version 0.2.0
         </Typography>
       </Container>
     </Box>

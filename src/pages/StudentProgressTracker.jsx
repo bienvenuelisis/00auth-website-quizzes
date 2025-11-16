@@ -30,14 +30,16 @@ import {
   CardContent,
   CircularProgress,
   IconButton,
-  Collapse
+  Collapse,
+  Button
 } from '@mui/material';
 import {
   ExpandMore as ExpandIcon,
   CheckCircle as CompletedIcon,
   PlayArrow as InProgressIcon,
   Lock as LockedIcon,
-  Star as PerfectIcon
+  Star as PerfectIcon,
+  EmojiEvents as LeaderboardIcon
 } from '@mui/icons-material';
 import { InstructorRoute } from '../components/Auth/ProtectedRoute';
 import { getPublishedCourses } from '../data/courses';
@@ -315,13 +317,23 @@ function StudentProgressTrackerContent() {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* En-tête */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-          Suivi des Progressions
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Suivez la progression de vos étudiants dans les formations
-        </Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+            Suivi des Progressions
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Suivez la progression de vos étudiants dans les formations
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<LeaderboardIcon />}
+          onClick={() => navigate('/admin/leaderboard')}
+        >
+          Voir le Leaderboard
+        </Button>
       </Box>
 
       {/* Sélection de la formation */}
